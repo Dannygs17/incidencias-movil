@@ -1,0 +1,7 @@
+{
+  "name": "incidencias-movil",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
