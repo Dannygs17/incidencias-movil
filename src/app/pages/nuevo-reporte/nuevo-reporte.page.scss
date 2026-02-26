@@ -1,0 +1,75 @@
+// 1. CONTENEDOR DE LA FOTO (Estilo de tu dibujo)
+.contenedor-foto {
+  margin-bottom: 20px;
+  text-align: center; // Centra todo el contenido
+  
+  .cuadro-vacio {
+    width: 100%;
+    max-width: 400px; // Evita que se estire demasiado en monitores anchos
+    height: 150px;
+    border: 2px solid #ccc;
+    margin: 0 auto; // Centra el cuadro en la pantalla
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: #f9f9f9;
+    cursor: pointer;
+    
+    ion-icon { font-size: 40px; color: #666; }
+    p { margin-top: 5px; color: #666; font-size: 14px; }
+  }
+
+  .foto-lista {
+    position: relative;
+    display: inline-block; // Para que el contenedor se ajuste al tamaño de la imagen
+    width: 100%;
+    max-width: 400px; // Limita el ancho en la web
+
+    img { 
+      width: 100%; 
+      max-height: 250px; // <--- ESTO EVITA QUE OCUPE MUCHA PANTALLA
+      object-fit: cover; // Recorta la imagen para que no se vea estirada
+      border-radius: 8px; 
+      border: 1px solid #ddd;
+    }
+
+    ion-button { 
+      position: absolute; 
+      top: 5px; 
+      right: 5px; 
+      --padding-start: 8px;
+      --padding-end: 8px;
+    }
+  }
+}
+
+
+
+.seccion-mapa {
+  margin-top: 20px;
+  
+  .titulo-mapa {
+    font-weight: bold;
+    margin-bottom: 10px;
+    display: block;
+    color: #ffffff; // Si estás en modo oscuro
+  }
+
+  // ESTILO DEL RECUADRO DEL MAPA
+ .cuadro-mapa {
+  width: 100%;
+  height: 200px; /* OBLIGATORIO: Altura fija */
+  background: #e0e0e0;
+  border-radius: 12px;
+  border: 1px solid #333;
+  z-index: 1; /* Para asegurar que se vea */
+  display: block; 
+}
+  
+  .btn-gps {
+    margin-top: 5px;
+    --color: #3880ff;
+  }
+}
+

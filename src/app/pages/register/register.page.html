@@ -1,0 +1,72 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/login"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Crear Cuenta</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <div class="ion-text-center ion-margin-bottom">
+    <h2>Registro</h2>
+    <p>Llena tus datos y sube tu INE</p>
+  </div>
+
+  <ion-list>
+    <ion-item>
+      <ion-label position="floating">Nombre Completo</ion-label>
+      <ion-input [(ngModel)]="datos.name" type="text"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="floating">Correo Electrónico</ion-label>
+      <ion-input [(ngModel)]="datos.email" type="email"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="floating">CURP</ion-label>
+      <ion-input [(ngModel)]="datos.curp" type="text" maxlength="18" style="text-transform: uppercase;"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="floating">Contraseña</ion-label>
+      <ion-input [(ngModel)]="datos.password" type="password"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="floating">Confirmar Contraseña</ion-label>
+      <ion-input [(ngModel)]="datos.password_confirmation" type="password"></ion-input>
+    </ion-item>
+  </ion-list>
+
+  <div class="ion-padding-vertical">
+    <h3 class="ion-text-center">Fotos del INE</h3>
+    
+    <ion-card (click)="tomarFoto('frente')" class="ion-text-center ion-padding" style="border: 2px dashed #ccc;">
+      <div *ngIf="!imagenFrente">
+        <ion-icon name="camera-outline" style="font-size: 40px; color: #666;"></ion-icon>
+        <p>Toque para foto FRENTE</p>
+      </div>
+      <img *ngIf="imagenFrente" [src]="imagenFrente" style="height: 150px; object-fit: contain;">
+    </ion-card>
+
+    <ion-card (click)="tomarFoto('reverso')" class="ion-text-center ion-padding" style="border: 2px dashed #ccc;">
+      <div *ngIf="!imagenReverso">
+        <ion-icon name="camera-outline" style="font-size: 40px; color: #666;"></ion-icon>
+        <p>Toque para foto REVERSO</p>
+      </div>
+      <img *ngIf="imagenReverso" [src]="imagenReverso" style="height: 150px; object-fit: contain;">
+    </ion-card>
+  </div>
+
+  <div class="ion-padding">
+    <ion-button expand="block" (click)="registrarUsuario()" [disabled]="cargando">
+      <span *ngIf="!cargando">Enviar Registro</span>
+      <span *ngIf="cargando">Enviando...</span>
+      <ion-spinner *ngIf="cargando" name="crescent" style="margin-left: 10px;"></ion-spinner>
+    </ion-button>
+  </div>
+
+</ion-content>

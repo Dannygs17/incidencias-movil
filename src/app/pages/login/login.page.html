@@ -1,0 +1,40 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-title>Acceso Ciudadano</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  
+  <div class="ion-text-center ion-margin-top ion-margin-bottom">
+    <ion-icon name="person-circle-outline" style="font-size: 80px; color: var(--ion-color-primary);"></ion-icon>
+    <h2 style="font-weight: bold;">Incidencias Smart</h2>
+    <p>Ingresa tus datos para continuar</p>
+  </div>
+
+  <ion-list lines="full" class="ion-margin-bottom">
+    <ion-item>
+      <ion-label position="floating">Correo Electrónico</ion-label>
+      <ion-input type="email" [(ngModel)]="credentials.email" name="email" ></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="floating">Contraseña</ion-label>
+      <ion-input type="password" [(ngModel)]="credentials.password" name="password"></ion-input>
+    </ion-item>
+  </ion-list>
+
+  <div class="ion-padding-horizontal">
+    <ion-button expand="block" shape="round" (click)="onLogin()" class="ion-margin-top">
+      Iniciar Sesión
+    </ion-button>
+    
+    <div class="ion-text-center ion-margin-top">
+      <p style="color: gray; font-size: 14px;">¿Aún no tienes cuenta?</p>
+      <ion-button fill="clear" (click)="irARegistro()" size="small">
+        Crea una cuenta nueva aquí
+      </ion-button>
+    </div>
+  </div>
+
+</ion-content>

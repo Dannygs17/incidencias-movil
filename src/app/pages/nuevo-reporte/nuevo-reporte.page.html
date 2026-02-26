@@ -1,0 +1,68 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/home"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Nuevo Reporte</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <div class="contenedor-foto">
+    <div *ngIf="!fotoCapturada" class="cuadro-vacio" (click)="tomarFoto()">
+      <ion-icon name="camera-outline"></ion-icon>
+      <p>Foto Incidencia</p>
+    </div>
+
+    <div *ngIf="fotoCapturada" class="foto-lista">
+      <img [src]="fotoCapturada" />
+      <ion-button color="danger" (click)="borrarFoto()" size="small">
+        <ion-icon name="trash-outline"></ion-icon>
+      </ion-button>
+    </div>
+  </div>
+
+  <ion-list>
+
+      <ion-item>
+      <ion-select label="Selecciona Categoria" 
+                  label-placement="stacked" 
+                  [(ngModel)]="reporte.categoria">
+        <ion-select-option value="agua">Agua</ion-select-option>          
+        <ion-select-option value="bacheo">Bache / Pavimento</ion-select-option>
+        <ion-select-option value="alumbrado">Alumbrado Público</ion-select-option>
+        <ion-select-option value="basura">Basura</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Descripcion</ion-label>
+      <ion-textarea 
+        placeholder="Escribe lo detectado aquí..." 
+        [(ngModel)]="reporte.descripcion"
+        [autoGrow]="true" 
+        rows="3">
+      </ion-textarea>
+    </ion-item>
+
+  
+  </ion-list>
+
+  <div class="seccion-mapa">
+  <ion-label class="titulo-mapa">Ubicación Actual</ion-label>
+  
+  <div id="mapa-leaflet" class="cuadro-mapa"></div>
+
+ <ion-button fill="clear" size="small" (click)="centrarMapa()" class="btn-gps">
+   <ion-icon slot="start" name="locate"></ion-icon>
+   Actualizar mi ubicación
+</ion-button>
+</div>
+
+  
+  <ion-button expand="block" (click)="enviarReporte()"  shape="round"  class="ion-margin-top">
+    Enviar Reporte
+  </ion-button>
+
+</ion-content>
