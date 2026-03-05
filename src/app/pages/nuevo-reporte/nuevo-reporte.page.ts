@@ -83,13 +83,16 @@ export class NuevoReportePage implements OnInit, AfterViewInit {
 
     // Inicializamos el mapa con la ubicación obtenida (o la de respaldo)
     if (!this.map) {
+      // Aumentamos el zoom a 18 para la vista satelital
       this.map = L.map('mapa-leaflet').setView(
         [this.reporte.latitud, this.reporte.longitud], 
-        16
+        18
       );
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
+      // --- CAMBIO APLICADO: Vista Satelital de Google Maps ---
+      L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        attribution: '© Google'
       }).addTo(this.map);
     }
 
@@ -104,7 +107,7 @@ export class NuevoReportePage implements OnInit, AfterViewInit {
         // 3. HACEMOS EL MARCADOR ARRASTRABLE (draggable: true)
         this.marker = L.marker([lat, lng], { draggable: true })
           .addTo(this.map)
-          .bindPopup(' Arrastra el pin a la ubicación exacta')
+          .bindPopup('Arrastra el pin a la ubicación exacta')
           .openPopup();
 
         // Escuchamos el evento cuando el usuario suelta el pin
