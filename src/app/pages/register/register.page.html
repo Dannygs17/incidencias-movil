@@ -11,58 +11,88 @@
 
   <div class="ion-text-center ion-margin-bottom">
     <h2>Registro</h2>
-    <p>Llena tus datos y sube tu INE</p>
+    <p>Llena tus datos y verifica tu identidad</p>
   </div>
 
   <ion-list>
     <ion-item>
       <ion-label position="floating">Nombre Completo</ion-label>
-      <ion-input [(ngModel)]="datos.name" type="text"></ion-input>
+      <ion-input [(ngModel)]="datos.name" type="text" autocapitalize="words"></ion-input>
     </ion-item>
 
     <ion-item>
       <ion-label position="floating">Correo Electrónico</ion-label>
-      <ion-input [(ngModel)]="datos.email" type="email"></ion-input>
+      <ion-input [(ngModel)]="datos.email" type="email" inputmode="email"></ion-input>
     </ion-item>
 
     <ion-item>
       <ion-label position="floating">CURP</ion-label>
-      <ion-input [(ngModel)]="datos.curp" type="text" maxlength="18" style="text-transform: uppercase;"></ion-input>
+      <ion-input [(ngModel)]="datos.curp" type="text" maxlength="18" style="text-transform: uppercase;" onkeyup="this.value = this.value.toUpperCase()"></ion-input>
     </ion-item>
 
     <ion-item>
       <ion-label position="floating">Contraseña</ion-label>
-      <ion-input [(ngModel)]="datos.password" type="password"></ion-input>
+      <ion-input [(ngModel)]="datos.password" [type]="mostrarClave ? 'text' : 'password'"></ion-input>
+      <ion-icon slot="end" 
+                [name]="mostrarClave ? 'eye-off' : 'eye'" 
+                (click)="mostrarClave = !mostrarClave" 
+                style="margin-top: 20px; color: #666; cursor: pointer;">
+      </ion-icon>
     </ion-item>
 
     <ion-item>
       <ion-label position="floating">Confirmar Contraseña</ion-label>
-      <ion-input [(ngModel)]="datos.password_confirmation" type="password"></ion-input>
+      <ion-input [(ngModel)]="datos.password_confirmation" [type]="mostrarConfClave ? 'text' : 'password'"></ion-input>
+      <ion-icon slot="end" 
+                [name]="mostrarConfClave ? 'eye-off' : 'eye'" 
+                (click)="mostrarConfClave = !mostrarConfClave" 
+                style="margin-top: 20px; color: #666; cursor: pointer;">
+      </ion-icon>
     </ion-item>
   </ion-list>
 
   <div class="ion-padding-vertical">
     <h3 class="ion-text-center">Fotos del INE</h3>
     
-    <ion-card (click)="tomarFoto('frente')" class="ion-text-center ion-padding" style="border: 2px dashed #ccc;">
+    <ion-card (click)="tomarFoto('frente')" class="ion-text-center ion-padding" [ngStyle]="{'border': imagenFrente ? '2px solid #2dd36f' : '2px dashed #ccc'}">
       <div *ngIf="!imagenFrente">
-        <ion-icon name="camera-outline" style="font-size: 40px; color: #666;"></ion-icon>
-        <p>Toque para foto FRENTE</p>
+        <ion-icon name="id-card-outline" style="font-size: 40px; color: #666;"></ion-icon>
+        <p><strong>Paso 1:</strong> Toque para foto FRENTE</p>
       </div>
-      <img *ngIf="imagenFrente" [src]="imagenFrente" style="height: 150px; object-fit: contain;">
+      
+      <div *ngIf="imagenFrente">
+        <ion-icon name="checkmark-circle" color="success" style="font-size: 30px;"></ion-icon>
+        <p style="font-size: 14px; margin: 5px 0; color: #2dd36f;">Frente capturado (Tocar para repetir)</p>
+        <img [src]="imagenFrente" style="height: 120px; object-fit: contain; border-radius: 8px;">
+      </div>
     </ion-card>
 
-    <ion-card (click)="tomarFoto('reverso')" class="ion-text-center ion-padding" style="border: 2px dashed #ccc;">
-      <div *ngIf="!imagenReverso">
-        <ion-icon name="camera-outline" style="font-size: 40px; color: #666;"></ion-icon>
-        <p>Toque para foto REVERSO</p>
-      </div>
-      <img *ngIf="imagenReverso" [src]="imagenReverso" style="height: 150px; object-fit: contain;">
-    </ion-card>
+    <div *ngIf="imagenFrente">
+      <ion-card (click)="tomarFoto('reverso')" class="ion-text-center ion-padding" [ngStyle]="{'border': imagenReverso ? '2px solid #2dd36f' : '2px dashed #ccc'}">
+        <div *ngIf="!imagenReverso">
+          <ion-icon name="camera-reverse-outline" style="font-size: 40px; color: #666;"></ion-icon>
+          <p><strong>Paso 2:</strong> Toque para foto REVERSO</p>
+        </div>
+        
+        <div *ngIf="imagenReverso">
+          <ion-icon name="checkmark-circle" color="success" style="font-size: 30px;"></ion-icon>
+          <p style="font-size: 14px; margin: 5px 0; color: #2dd36f;">Reverso capturado (Tocar para repetir)</p>
+          <img [src]="imagenReverso" style="height: 120px; object-fit: contain; border-radius: 8px;">
+        </div>
+      </ion-card>
+    </div>
+
+    <div class="ion-text-center" style="margin-top: 15px;">
+      <ion-icon name="lock-closed" color="medium"></ion-icon>
+      <p style="font-size: 12px; color: #666; margin-top: 5px; padding: 0 15px;">
+        Tus datos están encriptados y se usan únicamente para validar tu identidad ciudadana.
+      </p>
+    </div>
+
   </div>
 
   <div class="ion-padding">
-    <ion-button expand="block" (click)="registrarUsuario()" [disabled]="cargando">
+    <ion-button expand="block" (click)="registrarUsuario()" [disabled]="cargando || !imagenFrente || !imagenReverso">
       <span *ngIf="!cargando">Enviar Registro</span>
       <span *ngIf="cargando">Enviando...</span>
       <ion-spinner *ngIf="cargando" name="crescent" style="margin-left: 10px;"></ion-spinner>
