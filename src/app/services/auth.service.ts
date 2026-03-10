@@ -50,4 +50,24 @@ export class AuthService {
       })
     );
   }
+  
+
+  // --- ACTUALIZAR CONTRASEÑA ---
+  updatePassword(data: any) {
+    // 1. Recuperamos el token que guardaste en el login
+    const token = sessionStorage.getItem('token_seguridad');
+
+    // 2. Configuramos las cabeceras para que Laravel nos deje pasar
+    const headers = {
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/json'
+    };
+
+    // 3. Enviamos la petición POST a la ruta que creamos en api.php
+    return this.http.post(`${this.apiUrl}/user/profile/password`, data, { headers });
+  }
+
+
+
+
 }

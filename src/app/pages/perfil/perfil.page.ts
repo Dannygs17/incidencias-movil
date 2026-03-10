@@ -1,89 +1,109 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core'; // Importamos el Schema
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule, AlertController } from '@ionic/angular';
+import { IonicModule, AlertController, ToastController } from '@ionic/angular';
 import { Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-perfil',
   templateUrl: './perfil.page.html',
   styleUrls: ['./perfil.page.scss'],
   standalone: true,
-  imports: [IonicModule, CommonModule, FormsModule]
+  imports: [IonicModule, CommonModule, FormsModule],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA] // Esto permite que [passwordToggle] funcione sin errores
 })
 export class PerfilPage implements OnInit {
 
-  // Aquí guardaremos los datos para mostrarlos en el HTML
   usuario = {
     name: '',
     email: '',
     curp: ''
   };
 
+  // Variables para el Modal
+  isModalPasswordOpen = false;
+  passData = {
+    current_password: '',
+    password: '',
+    password_confirmation: ''
+  };
+
   constructor(
     private alertController: AlertController,
-    private router: Router
+    private toastController: ToastController,
+    private router: Router,
+    private authService: AuthService 
   ) { }
 
-  ngOnInit() {
-  }
+  ngOnInit() {}
 
-  // Usamos ionViewWillEnter para asegurar que cargue cada vez que entramos a la pestaña
   ionViewWillEnter() {
     this.cargarDatosUsuario();
   }
 
-  // --- FUNCIÓN PARA CARGAR LOS DATOS ---
   cargarDatosUsuario() {
-    // Leemos exactamente la llave 'usuario' que creaste en el login.page.ts
     const userString = sessionStorage.getItem('usuario'); 
-    
     if (userString) {
       this.usuario = JSON.parse(userString);
-      
-      // PASO 3: TRUCO DE LA CONSOLA PARA DEPURAR
-      console.log('👀 REVISIÓN DE DATOS DEL USUARIO:', this.usuario);
-
     } else {
-      console.warn('No se encontraron datos. Redirigiendo al login por seguridad.');
       this.ejecutarCerrarSesion();
     }
   }
 
-  // --- FUNCIÓN PARA NAVEGAR A MIS REPORTES ---
-  verMisReportes() {
-    // Más adelante crearemos esta pantalla para que vea su historial
-    this.router.navigate(['/tabs/mis-reportes']); 
+  cambiarPassword() {
+    this.passData = { current_password: '', password: '', password_confirmation: '' };
+    this.isModalPasswordOpen = true;
   }
 
-  // --- FUNCIONES PARA CERRAR SESIÓN ---
+  guardarNuevaPassword() {
+    if (!this.passData.current_password || !this.passData.password || !this.passData.password_confirmation) {
+      this.mostrarToast('Todos los campos son obligatorios', 'warning');
+      return;
+    }
+
+    if (this.passData.password !== this.passData.password_confirmation) {
+      this.mostrarToast('Las nuevas contraseñas no coinciden', 'danger');
+      return;
+    }
+
+    this.authService.updatePassword(this.passData).subscribe({
+      next: (res: any) => {
+        this.mostrarToast('Tu contraseña fue actualizada correctamente', 'success');
+        this.isModalPasswordOpen = false;
+      },
+      error: (err: any) => {
+        const errorMsg = err.error?.message || 'Error al actualizar. Verifica tu clave actual.';
+        this.mostrarToast(errorMsg, 'danger');
+      }
+    });
+  }
+
+  async mostrarToast(mensaje: string, color: string) {
+    const toast = await this.toastController.create({
+      message: mensaje,
+      duration: 2000,
+      color: color,
+      position: 'bottom'
+    });
+    toast.present();
+  }
+
   async confirmarCerrarSesion() {
     const alert = await this.alertController.create({
       header: 'Cerrar Sesión',
       message: '¿Estás seguro de que deseas salir de tu cuenta?',
       buttons: [
-        {
-          text: 'Cancelar',
-          role: 'cancel',
-          cssClass: 'secondary'
-        },
-        {
-          text: 'Sí, salir',
-          handler: () => {
-            this.ejecutarCerrarSesion();
-          }
-        }
+        { text: 'Cancelar', role: 'cancel' },
+        { text: 'Sí, salir', handler: () => this.ejecutarCerrarSesion() }
       ]
     });
     await alert.present();
   }
 
   ejecutarCerrarSesion() {
-    // Borramos exactamente las llaves que configuraste en tu login
     sessionStorage.removeItem('token_seguridad');
     sessionStorage.removeItem('usuario');
-
-    // Redirigimos al inicio
     this.router.navigate(['/login']);
   }
 }
