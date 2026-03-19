@@ -1,31 +1,33 @@
-import { Component, OnInit, AfterViewInit, inject } from '@angular/core';
+import { Component, OnInit, AfterViewInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, AlertController, ToastController } from '@ionic/angular'; 
+import { Router } from '@angular/router'; 
 import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
 import { addIcons } from 'ionicons';
-import { cameraOutline, locationOutline, map, locate, send, trashOutline } from 'ionicons/icons';
+import { 
+  cameraOutline, locationOutline, map, locate, send, trashOutline, 
+  shieldCheckmark, flash, notifications, ribbon, arrowForwardOutline,
+  timeOutline, hourglassOutline 
+} from 'ionicons/icons';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Geolocation } from '@capacitor/geolocation';
+import { AuthService } from '../../services/auth.service'; 
 
 import * as L from 'leaflet';
 
-const iconRetinaUrl = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png';
-const iconUrl = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png';
-const shadowUrl = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png';
-
+// --- SOLUCIÓN DEL PIN AZUL DE LEAFLET ---
+// Esto le dice a Leaflet de dónde descargar las imágenes oficiales de su pin
 const iconDefault = L.icon({
-  iconRetinaUrl,
-  iconUrl,
-  shadowUrl,
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
   tooltipAnchor: [16, -28],
   shadowSize: [41, 41]
 });
-
-L.Marker.prototype.options.icon = iconDefault;
 
 @Component({
   selector: 'app-nuevo-reporte',
@@ -37,66 +39,86 @@ L.Marker.prototype.options.icon = iconDefault;
 export class NuevoReportePage implements OnInit, AfterViewInit {
 
   private http = inject(HttpClient);
+  private router = inject(Router);
+  private alertController = inject(AlertController);
+  private toastController = inject(ToastController);
+  private authService = inject(AuthService); 
+  private cdr = inject(ChangeDetectorRef); 
+  
   private apiUrl = 'http://localhost:8000/api/incidencias';
 
-  reporte = {
-    categoria: '',
-    descripcion: '',
-    latitud: 0,
-    longitud: 0
-  };
-
+  usuario: any = { status: '' }; 
+  reporte = { categoria: '', descripcion: '', latitud: 0, longitud: 0 };
   fotoCapturada: string | undefined;
   map: L.Map | undefined;
   marker: L.Marker | undefined;
 
   constructor() {
-    addIcons({ cameraOutline, locationOutline, map, locate, send, trashOutline });
+    addIcons({ 
+      cameraOutline, locationOutline, map, locate, send, trashOutline, 
+      shieldCheckmark, flash, notifications, ribbon, arrowForwardOutline,
+      timeOutline, hourglassOutline
+    });
   }
 
   ngOnInit() {}
 
+  async ionViewWillEnter() {
+    const userJson = sessionStorage.getItem('usuario');
+    if (userJson) {
+      this.usuario = JSON.parse(userJson);
+      this.cdr.detectChanges();
+    }
+
+    this.authService.verificarEstatus().subscribe({
+      next: (res: any) => {
+        console.log('Sincronización exitosa:', res.status);
+        this.usuario = res;
+        sessionStorage.setItem('usuario', JSON.stringify(res));
+        this.cdr.detectChanges(); 
+
+        if (res.status === 'approved') {
+          setTimeout(() => this.initMap(), 500);
+        }
+      },
+      error: (err) => console.error('Error sincronizando', err)
+    });
+  }
+
   async ngAfterViewInit() {
-    setTimeout(() => {
-      this.initMap();
-    }, 500);
+    if (this.usuario.status === 'approved') {
+      setTimeout(() => this.initMap(), 800);
+    }
   }
 
   async initMap() {
+    const container = document.getElementById('mapa-leaflet');
+    if (!container) {
+      setTimeout(() => this.initMap(), 500);
+      return;
+    }
+    if (this.map) {
+      this.map.invalidateSize();
+      return;
+    }
+
     try {
-      // 1. FORZAMOS EL USO DE GPS REAL CON OPCIONES
-      const position = await Geolocation.getCurrentPosition({
-        enableHighAccuracy: true, // Fuerza a usar el chip GPS en celulares
-        timeout: 10000,           // Si tarda más de 10 seg, lanza error
-        maximumAge: 0             // No usa caché viejo
-      });
-      
+      const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
       this.reporte.latitud = position.coords.latitude;
       this.reporte.longitud = position.coords.longitude;
-
     } catch (error) {
-      console.warn('GPS falló o tardó mucho, usando coordenadas de respaldo', error);
-      // 2. COORDENADAS DE RESPALDO (Poza Rica) PARA QUE EL MAPA NO SE ROMPA
-      this.reporte.latitud = 20.5333;
+      this.reporte.latitud = 20.5333; 
       this.reporte.longitud = -97.4500;
     }
 
-    // Inicializamos el mapa con la ubicación obtenida (o la de respaldo)
-    if (!this.map) {
-      // Aumentamos el zoom a 18 para la vista satelital
-      this.map = L.map('mapa-leaflet').setView(
-        [this.reporte.latitud, this.reporte.longitud], 
-        18
-      );
-
-      // --- CAMBIO APLICADO: Vista Satelital de Google Maps ---
-      L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
-        maxZoom: 20,
-        attribution: '© Google'
-      }).addTo(this.map);
-    }
-
+    this.map = L.map('mapa-leaflet').setView([this.reporte.latitud, this.reporte.longitud], 18);
+    L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+      maxZoom: 20,
+      attribution: '© Google Maps'
+    }).addTo(this.map);
+    
     this.actualizarMarcador(this.reporte.latitud, this.reporte.longitud);
+    setTimeout(() => this.map?.invalidateSize(), 600);
   }
 
   actualizarMarcador(lat: number, lng: number) {
@@ -104,18 +126,16 @@ export class NuevoReportePage implements OnInit, AfterViewInit {
       if (this.marker) {
         this.marker.setLatLng([lat, lng]);
       } else {
-        // 3. HACEMOS EL MARCADOR ARRASTRABLE (draggable: true)
-        this.marker = L.marker([lat, lng], { draggable: true })
-          .addTo(this.map)
-          .bindPopup('Arrastra el pin a la ubicación exacta')
-          .openPopup();
+        // AQUÍ USAMOS EL ICONO CREADO ARRIBA
+        this.marker = L.marker([lat, lng], { 
+          draggable: true,
+          icon: iconDefault 
+        }).addTo(this.map);
 
-        // Escuchamos el evento cuando el usuario suelta el pin
-        this.marker.on('dragend', (event) => {
+        this.marker.on('dragend', (event: any) => {
           const nuevaPosicion = event.target.getLatLng();
           this.reporte.latitud = nuevaPosicion.lat;
           this.reporte.longitud = nuevaPosicion.lng;
-          console.log('Nueva ubicación manual:', this.reporte.latitud, this.reporte.longitud);
         });
       }
       this.map.setView([lat, lng]);
@@ -124,84 +144,55 @@ export class NuevoReportePage implements OnInit, AfterViewInit {
 
   async centrarMapa() {
     try {
-      const position = await Geolocation.getCurrentPosition({
-        enableHighAccuracy: true,
-        timeout: 5000,
-        maximumAge: 0
-      });
+      const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
       this.reporte.latitud = position.coords.latitude;
       this.reporte.longitud = position.coords.longitude;
-
       if (this.map) {
         this.map.flyTo([this.reporte.latitud, this.reporte.longitud], 18);
         this.actualizarMarcador(this.reporte.latitud, this.reporte.longitud);
       }
-    } catch (e) {
-      alert('No pudimos acceder a tu GPS. Por favor, mueve el pin manualmente en el mapa.');
-    }
+    } catch (e) { this.mostrarToast('GPS no disponible', 'danger'); }
   }
 
   async tomarFoto() {
     try {
       const image = await Camera.getPhoto({
-        quality: 90,
-        allowEditing: false,
+        quality: 60,
         resultType: CameraResultType.DataUrl,
-        source: CameraSource.Prompt
+        source: CameraSource.Prompt,
+        correctOrientation: true
       });
       this.fotoCapturada = image.dataUrl;
-    } catch (error) {
-      console.log('Error al tomar foto', error);
-    }
+    } catch (e) {}
   }
 
-  borrarFoto() {
-    this.fotoCapturada = undefined;
+  borrarFoto() { this.fotoCapturada = undefined; }
+
+  async mostrarToast(msj: string, color: string) {
+    const t = await this.toastController.create({ 
+      message: msj, color: color, duration: 2500, position: 'bottom' 
+    });
+    t.present();
   }
 
   enviarReporte() {
-    if (!this.reporte.categoria || !this.reporte.descripcion) {
-      alert('Por favor, selecciona una categoría y escribe una descripción.');
+    if (this.usuario.status !== 'approved') return;
+    if (!this.reporte.categoria || !this.reporte.descripcion || !this.fotoCapturada) {
+      this.mostrarToast('Faltan datos o la foto', 'warning');
       return;
     }
-
     const token = sessionStorage.getItem('token_seguridad');
-
-    if (!token) {
-      alert('No hay una sesión activa. Por favor, inicia sesión.');
-      return;
-    }
-
-    const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}`
-    });
-
-    const body = {
-      categoria: this.reporte.categoria,
-      descripcion: this.reporte.descripcion,
-      latitud: this.reporte.latitud,
-      longitud: this.reporte.longitud,
-      imagen: this.fotoCapturada 
-    };
-
-    console.log('Enviando reporte con token...', body);
+    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
+    const body = { ...this.reporte, imagen: this.fotoCapturada };
 
     this.http.post(this.apiUrl, body, { headers }).subscribe({
-      next: (response: any) => {
-        console.log('Respuesta de Laravel:', response);
-        alert('¡Reporte enviado con éxito!');
-        
-        this.reporte.descripcion = '';
-        this.fotoCapturada = undefined;
+      next: () => {
+        this.mostrarToast('Reporte enviado con éxito', 'success');
+        this.router.navigate(['/tabs/home']);
       },
-      error: (error) => {
-        console.error('Error al enviar:', error);
-        if (error.status === 401) {
-          alert('Tu sesión ha expirado. Inicia sesión de nuevo.');
-        } else {
-          alert('Error al conectar con el servidor.');
-        }
-      }
+      error: () => this.mostrarToast('Error al conectar con el servidor', 'danger')
     });
   }
+
+  irAPerfil() { this.router.navigate(['/tabs/perfil']); }
 }

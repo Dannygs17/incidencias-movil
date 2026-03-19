@@ -16,8 +16,6 @@ import { IncidenciaService } from '../services/incidencia.service';
 export class HomePage {
 
   misReportes: any[] = []; 
-  
-  // --- VARIABLES PARA EL MODAL ---
   isModalOpen = false;
   reporteSeleccionado: any = null;
 
@@ -29,11 +27,11 @@ export class HomePage {
 
   ionViewWillEnter() {
     this.authService.verificarEstatus().subscribe({
-      next: (res) => {
+      next: (res: any) => {
         this.cargarReportes(); 
       },
-      error: (err) => {
-        console.log('Error de verificación');
+      error: (err: any) => {
+        console.log('Error de verificación', err);
       }
     });
   }
@@ -44,27 +42,25 @@ export class HomePage {
         this.misReportes = res; 
         if (event) event.target.complete(); 
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Error al cargar reportes', err);
         if (event) event.target.complete();
       }
     });
   }
 
-  // --- FUNCIONES DEL MODAL ---
   abrirDetalles(reporte: any) {
     this.reporteSeleccionado = reporte;
-    this.isModalOpen = true; // Abre la ventana emergente
+    this.isModalOpen = true;
   }
 
   cerrarModal() {
-    this.isModalOpen = false; // Cierra la ventana emergente
+    this.isModalOpen = false;
     setTimeout(() => {
       this.reporteSeleccionado = null;
     }, 300);
   }
 
-  // --- FUNCIONES DE DISEÑO ---
   getColorEstado(estado: string): string {
     switch (estado?.toLowerCase()) {
       case 'pendiente': return 'danger';    
@@ -96,10 +92,10 @@ export class HomePage {
 
   cerrarSesion() {
     this.authService.logout().subscribe({
-      next: () => {
+      next: (res: any) => {
         this.router.navigate(['/login']);
       },
-      error: (err) => {
+      error: (err: any) => {
         sessionStorage.clear();
         this.router.navigate(['/login']);
       }

@@ -15,7 +15,6 @@ import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 })
 export class RegisterPage implements OnInit {
 
-  // Variables para el HTML
   datos = {
     name: '',
     email: '',
@@ -26,14 +25,9 @@ export class RegisterPage implements OnInit {
 
   imagenFrente: string | undefined;
   imagenReverso: string | undefined;
-  
-  // Variable real (Blob) para enviar al servidor
   blobFrente: Blob | null = null;
   blobReverso: Blob | null = null;
-
   cargando: boolean = false;
-
-  // --- NUEVAS VARIABLES: Controladores del "Ojito" de contraseña ---
   mostrarClave: boolean = false;
   mostrarConfClave: boolean = false;
 
@@ -44,15 +38,12 @@ export class RegisterPage implements OnInit {
     private loadingController: LoadingController
   ) { }
 
-  ngOnInit() {
-  }
+  ngOnInit() {}
 
-  // --- NUEVA FUNCIÓN: Se ejecuta CADA VEZ que se entra a esta pantalla ---
   ionViewWillEnter() {
     this.limpiarFormulario();
   }
 
-  // --- NUEVA FUNCIÓN: Resetea todos los campos y fotos a vacío ---
   limpiarFormulario() {
     this.datos = {
       name: '',
@@ -70,7 +61,6 @@ export class RegisterPage implements OnInit {
     this.cargando = false;
   }
 
-  // Función para tomar foto
   async tomarFoto(tipo: 'frente' | 'reverso') {
     try {
       const image = await Camera.getPhoto({
@@ -92,11 +82,10 @@ export class RegisterPage implements OnInit {
       }
 
     } catch (error) {
-      console.log('El usuario canceló o hubo error', error);
+      console.log('Captura cancelada');
     }
   }
 
-  // Función para registrar
   async registrarUsuario() {
     if (!this.datos.name || !this.datos.email || !this.datos.curp || !this.datos.password) {
       this.mostrarAlerta('Faltan datos', 'Por favor llena todos los campos de texto.');
@@ -120,27 +109,25 @@ export class RegisterPage implements OnInit {
     const formData = new FormData();
     formData.append('name', this.datos.name);
     formData.append('email', this.datos.email);
-    formData.append('curp', this.datos.curp);
+    formData.append('curp', this.datos.curp.toUpperCase());
     formData.append('password', this.datos.password);
     formData.append('password_confirmation', this.datos.password_confirmation); 
-    
     formData.append('ine_frente', this.blobFrente, 'frente.jpg');
     formData.append('ine_reverso', this.blobReverso, 'reverso.jpg');
 
     this.authService.register(formData).subscribe({
-      next: async (res) => {
-        loading.dismiss();
+      next: async (res: any) => {
+        await loading.dismiss();
         this.cargando = false;
         
         const alert = await this.alertController.create({
           header: 'Registro Exitoso',
           subHeader: 'Validación requerida',
-          message: 'Tus datos se han enviado correctamente. Un administrador verificará tu información. Por favor espera a ser aprobado para iniciar sesión.',
+          message: 'Tus datos se han enviado correctamente. Un administrador verificará tu información.',
           buttons: [
             {
               text: 'Entendido',
               handler: () => {
-                // Limpiamos los datos ANTES de redirigir
                 this.limpiarFormulario();
                 this.router.navigate(['/login']);
               }
@@ -150,11 +137,11 @@ export class RegisterPage implements OnInit {
         });
         await alert.present();
       },
-      error: async (err) => {
-        loading.dismiss();
+      error: async (err: any) => {
+        await loading.dismiss();
         this.cargando = false;
         console.error(err);
-        this.mostrarAlerta('Error', 'Hubo un problema con el registro. Verifica tu conexión o si el correo ya existe.');
+        this.mostrarAlerta('Error', 'Hubo un problema con el registro.');
       }
     });
   }

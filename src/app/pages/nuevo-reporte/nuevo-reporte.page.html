@@ -7,62 +7,109 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
+<ion-content class="ion-padding" style="--background: #121212;">
 
-  <div class="contenedor-foto">
-    <div *ngIf="!fotoCapturada" class="cuadro-vacio" (click)="tomarFoto()">
-      <ion-icon name="camera-outline"></ion-icon>
-      <p>Foto Incidencia</p>
+  <div *ngIf="usuario.status !== 'approved'" class="pantalla-bloqueo" style="text-align: center; padding-top: 30px;">
+    
+    <div style="background: #1e1e1e; width: 90px; height: 90px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;">
+      <ion-icon [name]="usuario.status === 'pending' ? 'time-outline' : 'shield-checkmark'" 
+                [color]="usuario.status === 'pending' ? 'warning' : 'primary'"
+                style="font-size: 50px;"></ion-icon>
     </div>
 
-    <div *ngIf="fotoCapturada" class="foto-lista">
-      <img [src]="fotoCapturada" />
-      <ion-button color="danger" (click)="borrarFoto()" size="small">
-        <ion-icon name="trash-outline"></ion-icon>
+    <div *ngIf="usuario.status !== 'pending'">
+      <h2 style="font-weight: 800; color: white; margin-bottom: 15px; font-size: 22px;">¡Tu voz tiene poder!</h2>
+      <p style="color: #aaa; line-height: 1.5; margin-bottom: 25px; font-size: 14px;">
+        Para que tus reportes tengan validez oficial y seguimiento prioritario, solo necesitamos verificar tu identidad.
+      </p>
+
+      <div style="background: #1e1e1e; border-radius: 20px; padding: 20px; text-align: left; margin-bottom: 30px;">
+        <h4 style="color: var(--ion-color-primary); font-size: 12px; font-weight: 800; letter-spacing: 1px; margin-top: 0; margin-bottom: 15px; text-transform: uppercase;">
+          Beneficios de verificarte:
+        </h4>
+        <p style="color: #ccc; font-size: 13px; margin-bottom: 12px; display: flex; align-items: center;">
+          <ion-icon name="flash" color="warning" style="margin-right: 12px; font-size: 18px;"></ion-icon> Atención prioritaria del Ayuntamiento
+        </p>
+        <p style="color: #ccc; font-size: 13px; margin-bottom: 12px; display: flex; align-items: center;">
+          <ion-icon name="notifications" color="warning" style="margin-right: 12px; font-size: 18px;"></ion-icon> Notificaciones de avance en tiempo real
+        </p>
+       
+      </div>
+
+      <ion-button expand="block" shape="round" color="primary" (click)="irAPerfil()" style="font-weight: 800; height: 50px;">
+        VERIFICAR MI CUENTA AHORA
       </ion-button>
     </div>
+
+    <div *ngIf="usuario.status === 'pending'">
+      <h2 style="font-weight: 800; color: white; margin-bottom: 15px; font-size: 22px;">Validación en curso</h2>
+      <p style="color: #aaa; line-height: 1.5; margin-bottom: 30px; font-size: 14px;">
+        Estamos revisando tu documentación. En cuanto un administrador apruebe tu perfil, este formulario se activará automáticamente.
+      </p>
+
+      <ion-button expand="block" shape="round" color="warning" style="font-weight: 800; height: 50px; pointer-events: none;">
+        <ion-icon name="hourglass-outline" slot="start"></ion-icon>
+        ESPERANDO APROBACIÓN
+      </ion-button>
+    </div>
+
   </div>
 
-  <ion-list>
+
+  <div [hidden]="usuario.status !== 'approved'">
+    
+    <div class="contenedor-foto">
+      <div *ngIf="!fotoCapturada" class="cuadro-vacio" (click)="tomarFoto()">
+        <ion-icon name="camera-outline"></ion-icon>
+        <p>Foto Incidencia</p>
+      </div>
+
+      <div *ngIf="fotoCapturada" class="foto-lista">
+        <img [src]="fotoCapturada" />
+        <ion-button color="danger" (click)="borrarFoto()" size="small">
+          <ion-icon name="trash-outline"></ion-icon>
+        </ion-button>
+      </div>
+    </div>
+
+    <ion-list>
+      <ion-item>
+        <ion-select label="Selecciona Categoria" 
+                    label-placement="stacked" 
+                    [(ngModel)]="reporte.categoria">
+          <ion-select-option value="agua">Agua</ion-select-option>          
+          <ion-select-option value="bacheo">Bache / Pavimento</ion-select-option>
+          <ion-select-option value="alumbrado">Alumbrado Público</ion-select-option>
+          <ion-select-option value="basura">Basura</ion-select-option>
+        </ion-select>
+      </ion-item>
 
       <ion-item>
-      <ion-select label="Selecciona Categoria" 
-                  label-placement="stacked" 
-                  [(ngModel)]="reporte.categoria">
-        <ion-select-option value="agua">Agua</ion-select-option>          
-        <ion-select-option value="bacheo">Bache / Pavimento</ion-select-option>
-        <ion-select-option value="alumbrado">Alumbrado Público</ion-select-option>
-        <ion-select-option value="basura">Basura</ion-select-option>
-      </ion-select>
-    </ion-item>
+        <ion-label position="stacked">Descripcion</ion-label>
+        <ion-textarea 
+          placeholder="Escribe el problema que estás reportando..." 
+          [(ngModel)]="reporte.descripcion"
+          [autoGrow]="true" 
+          rows="3">
+        </ion-textarea>
+      </ion-item>
+    </ion-list>
 
-    <ion-item>
-      <ion-label position="stacked">Descripcion</ion-label>
-      <ion-textarea 
-        placeholder="Escribe el problema que estás reportando..." 
-        [(ngModel)]="reporte.descripcion"
-        [autoGrow]="true" 
-        rows="3">
-      </ion-textarea>
-    </ion-item>
+    <div class="seccion-mapa">
+      <ion-label class="titulo-mapa">Ubicación Actual</ion-label>
+      
+      <div id="mapa-leaflet" class="cuadro-mapa"></div>
 
-  
-  </ion-list>
+      <ion-button fill="clear" size="small" (click)="centrarMapa()" class="btn-gps">
+        <ion-icon slot="start" name="locate"></ion-icon>
+        Actualizar mi ubicación
+      </ion-button>
+    </div>
 
-  <div class="seccion-mapa">
-  <ion-label class="titulo-mapa">Ubicación Actual</ion-label>
-  
-  <div id="mapa-leaflet" class="cuadro-mapa"></div>
+    <ion-button expand="block" (click)="enviarReporte()" shape="round" class="ion-margin-top">
+      Enviar Reporte
+    </ion-button>
 
- <ion-button fill="clear" size="small" (click)="centrarMapa()" class="btn-gps">
-   <ion-icon slot="start" name="locate"></ion-icon>
-   Actualizar mi ubicación
-</ion-button>
-</div>
-
-  
-  <ion-button expand="block" (click)="enviarReporte()"  shape="round"  class="ion-margin-top">
-    Enviar Reporte
-  </ion-button>
+  </div>
 
 </ion-content>
