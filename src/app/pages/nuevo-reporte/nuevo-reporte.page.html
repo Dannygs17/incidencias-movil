@@ -72,17 +72,34 @@
       </div>
     </div>
 
-    <ion-list>
+    <ion-list style="background: transparent;">
+      
       <ion-item>
         <ion-select label="Selecciona Categoria" 
                     label-placement="stacked" 
-                    [(ngModel)]="reporte.categoria">
-          <ion-select-option value="agua">Agua</ion-select-option>          
-          <ion-select-option value="bacheo">Bache / Pavimento</ion-select-option>
-          <ion-select-option value="alumbrado">Alumbrado Público</ion-select-option>
-          <ion-select-option value="basura">Basura</ion-select-option>
+                    [(ngModel)]="reporte.categoria_id"
+                    cancelText="Cancelar"
+                    okText="Seleccionar">
+          
+          <ion-select-option *ngFor="let cat of categorias" [value]="cat.id">
+            {{ cat.nombre }}
+          </ion-select-option>
+          
         </ion-select>
       </ion-item>
+
+      <div *ngIf="reporte.categoria_id" style="padding: 15px 0; text-align: center;">
+        <ng-container *ngFor="let cat of categorias">
+          <div *ngIf="cat.id === reporte.categoria_id" style="display: inline-flex; align-items: center; justify-content: center; background: rgba(var(--ion-color-primary-rgb), 0.1); padding: 10px 20px; border-radius: 30px; border: 1px solid rgba(var(--ion-color-primary-rgb), 0.3);">
+            <span class="material-symbols-outlined" style="font-size: 28px; color: var(--ion-color-primary); margin-right: 10px;">
+              {{ cat.icono }}
+            </span>
+            <span style="color: var(--ion-color-primary); font-weight: bold; font-size: 16px;">
+              {{ cat.nombre }}
+            </span>
+          </div>
+        </ng-container>
+      </div>
 
       <ion-item>
         <ion-label position="stacked">Descripcion</ion-label>
@@ -96,7 +113,7 @@
     </ion-list>
 
     <div class="seccion-mapa">
-      <ion-label class="titulo-mapa">Ubicación Actual</ion-label>
+      <ion-label class="titulo-mapa">Ubicación Exacta</ion-label>
       
       <div id="mapa-leaflet" class="cuadro-mapa"></div>
 
@@ -106,7 +123,8 @@
       </ion-button>
     </div>
 
-    <ion-button expand="block" (click)="enviarReporte()" shape="round" class="ion-margin-top">
+    <ion-button expand="block" (click)="enviarReporte()" shape="round" class="ion-margin-top" style="margin-bottom: 30px; height: 50px; font-weight: bold;">
+      <ion-icon slot="start" name="send"></ion-icon>
       Enviar Reporte
     </ion-button>
 

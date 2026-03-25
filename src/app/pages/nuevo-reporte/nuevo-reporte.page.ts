@@ -16,8 +16,6 @@ import { AuthService } from '../../services/auth.service';
 
 import * as L from 'leaflet';
 
-// --- SOLUCIÓN DEL PIN AZUL DE LEAFLET ---
-// Esto le dice a Leaflet de dónde descargar las imágenes oficiales de su pin
 const iconDefault = L.icon({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -48,7 +46,13 @@ export class NuevoReportePage implements OnInit, AfterViewInit {
   private apiUrl = 'http://localhost:8000/api/incidencias';
 
   usuario: any = { status: '' }; 
-  reporte = { categoria: '', descripcion: '', latitud: 0, longitud: 0 };
+  
+  // NUEVO: Arreglo para guardar las categorías que vienen de Laravel
+  categorias: any[] = []; 
+
+  // MODIFICADO: Cambiamos 'categoria' por 'categoria_id' (iniciado en null)
+  reporte: any = { categoria_id: null, descripcion: '', latitud: 0, longitud: 0 };
+  
   fotoCapturada: string | undefined;
   map: L.Map | undefined;
   marker: L.Marker | undefined;
@@ -61,7 +65,24 @@ export class NuevoReportePage implements OnInit, AfterViewInit {
     });
   }
 
-  ngOnInit() {}
+  ngOnInit() {
+    // NUEVO: Llamamos a la función al abrir la pantalla
+    this.cargarCategorias();
+  }
+
+  // NUEVO: Función que descarga las categorías reales de tu base de datos
+  cargarCategorias() {
+    // Asegúrate de tener esta ruta abierta en tu api.php de Laravel
+    this.http.get('http://localhost:8000/api/categorias').subscribe({
+      next: (res: any) => {
+        this.categorias = res;
+      },
+      error: (err) => {
+        console.error('Error al cargar categorías', err);
+        this.mostrarToast('No se pudieron cargar las categorías', 'danger');
+      }
+    });
+  }
 
   async ionViewWillEnter() {
     const userJson = sessionStorage.getItem('usuario');
@@ -72,7 +93,6 @@ export class NuevoReportePage implements OnInit, AfterViewInit {
 
     this.authService.verificarEstatus().subscribe({
       next: (res: any) => {
-        console.log('Sincronización exitosa:', res.status);
         this.usuario = res;
         sessionStorage.setItem('usuario', JSON.stringify(res));
         this.cdr.detectChanges(); 
@@ -126,7 +146,6 @@ export class NuevoReportePage implements OnInit, AfterViewInit {
       if (this.marker) {
         this.marker.setLatLng([lat, lng]);
       } else {
-        // AQUÍ USAMOS EL ICONO CREADO ARRIBA
         this.marker = L.marker([lat, lng], { 
           draggable: true,
           icon: iconDefault 
@@ -177,10 +196,13 @@ export class NuevoReportePage implements OnInit, AfterViewInit {
 
   enviarReporte() {
     if (this.usuario.status !== 'approved') return;
-    if (!this.reporte.categoria || !this.reporte.descripcion || !this.fotoCapturada) {
+    
+    // MODIFICADO: Ahora validamos que 'categoria_id' exista en lugar de 'categoria'
+    if (!this.reporte.categoria_id || !this.reporte.descripcion || !this.fotoCapturada) {
       this.mostrarToast('Faltan datos o la foto', 'warning');
       return;
     }
+    
     const token = sessionStorage.getItem('token_seguridad');
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
     const body = { ...this.reporte, imagen: this.fotoCapturada };
