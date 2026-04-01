@@ -16,6 +16,9 @@ import { IncidenciaService } from '../services/incidencia.service';
 export class HomePage {
 
   misReportes: any[] = []; 
+  reportesFiltrados: any[] = []; // NUEVO: Arreglo que mostraremos en la vista
+  filtroActual: string = 'todos'; // NUEVO: Valor por defecto del segmento
+
   isModalOpen = false;
   reporteSeleccionado: any = null;
 
@@ -40,6 +43,7 @@ export class HomePage {
     this.incidenciaService.getMisReportes().subscribe({
       next: (res: any) => {
         this.misReportes = res; 
+        this.filtrar(); // NUEVO: Filtramos inmediatamente al recibir los datos
         if (event) event.target.complete(); 
       },
       error: (err: any) => {
@@ -47,6 +51,17 @@ export class HomePage {
         if (event) event.target.complete();
       }
     });
+  }
+
+  // NUEVA FUNCIÓN: Lógica para separar los reportes por estado
+  filtrar() {
+    if (this.filtroActual === 'todos') {
+      this.reportesFiltrados = [...this.misReportes];
+    } else if (this.filtroActual === 'activos') {
+      this.reportesFiltrados = this.misReportes.filter(r => r.estado !== 'resuelto');
+    } else if (this.filtroActual === 'resueltos') {
+      this.reportesFiltrados = this.misReportes.filter(r => r.estado === 'resuelto');
+    }
   }
 
   abrirDetalles(reporte: any) {

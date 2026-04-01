@@ -15,9 +15,23 @@
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
+  <div style="padding: 15px 15px 0 15px;">
+    <ion-segment [(ngModel)]="filtroActual" (ionChange)="filtrar()" mode="ios" style="background: #1e1e1e; border-radius: 8px;">
+      <ion-segment-button value="todos">
+        <ion-label style="font-weight: bold; font-size: 12px;">Todos</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="activos">
+        <ion-label style="font-weight: bold; font-size: 12px;">Activos</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="resueltos">
+        <ion-label style="font-weight: bold; font-size: 12px;">Resueltos</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </div>
+
   <div style="padding: 15px;">
     
-    <ion-card *ngFor="let reporte of misReportes" 
+    <ion-card *ngFor="let reporte of reportesFiltrados" 
               [ngStyle]="{'border-left': '4px solid var(--ion-color-' + getColorEstado(reporte.estado) + ')'}"
               style="margin: 0 0 15px 0; border-radius: 22px; background: #1e1e1e; border-top: 1px solid #2a2a2a; border-right: 1px solid #2a2a2a; border-bottom: 1px solid #2a2a2a; box-shadow: 0 4px 15px rgba(0,0,0,0.3);"
               (click)="abrirDetalles(reporte)" 
@@ -65,9 +79,9 @@
       </div>
     </ion-card>
 
-    <div *ngIf="misReportes.length === 0" style="text-align: center; margin-top: 80px; color: #444;">
+    <div *ngIf="reportesFiltrados.length === 0" style="text-align: center; margin-top: 80px; color: #444;">
       <ion-icon name="file-tray-outline" style="font-size: 80px;"></ion-icon>
-      <h3 style="font-weight: bold; margin-top: 10px;">No hay reportes registrados</h3>
+      <h3 style="font-weight: bold; margin-top: 10px;">No hay reportes en esta sección</h3>
     </div>
   </div>
 
