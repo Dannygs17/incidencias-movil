@@ -70,26 +70,6 @@ export class HomePage {
     }
   }
 
-  getIconoCategoria(categoria: string): string {
-    switch (categoria?.toLowerCase()) {
-      case 'agua': return 'water-outline';
-      case 'alumbrado': return 'bulb-outline';
-      case 'bacheo': return 'construct-outline'; 
-      case 'basura': return 'trash-outline';
-      default: return 'clipboard-outline';
-    }
-  }
-
-  getColorCategoria(categoria: string): string {
-    switch (categoria?.toLowerCase()) {
-      case 'agua': return 'primary';      
-      case 'alumbrado': return 'warning'; 
-      case 'bacheo': return 'medium';     
-      case 'basura': return 'success';    
-      default: return 'dark';
-    }
-  }
-
   cerrarSesion() {
     this.authService.logout().subscribe({
       next: (res: any) => {
