@@ -102,7 +102,7 @@ export class RegisterPage implements OnInit {
 
     this.cargando = true;
     const loading = await this.loadingController.create({
-      message: 'Subiendo información...',
+      message: 'Creando cuenta...',
     });
     await loading.present();
 
@@ -120,16 +120,23 @@ export class RegisterPage implements OnInit {
         await loading.dismiss();
         this.cargando = false;
         
+        // === CAMBIO CLAVE: GUARDAR SESIÓN AL INSTANTE ===
+        if (res.access_token) {
+          sessionStorage.setItem('token_seguridad', res.access_token);
+          sessionStorage.setItem('usuario', JSON.stringify(res.user));
+          sessionStorage.setItem('login_method', 'normal'); // Marca de registro manual
+        }
+        
         const alert = await this.alertController.create({
-          header: 'Registro Exitoso',
-          subHeader: 'Validación requerida',
-          message: 'Tus datos se han enviado correctamente. Un administrador verificará tu información.',
+          header: '¡Bienvenido!',
+          message: 'Tu cuenta ha sido creada. Estamos validando tu documentación, mientras tanto, ya puedes explorar la app.',
           buttons: [
             {
               text: 'Entendido',
               handler: () => {
                 this.limpiarFormulario();
-                this.router.navigate(['/login']);
+                // === CAMBIO CLAVE: MANDAMOS AL HOME, NO AL LOGIN ===
+                this.router.navigate(['/tabs/home']);
               }
             }
           ],
@@ -141,7 +148,16 @@ export class RegisterPage implements OnInit {
         await loading.dismiss();
         this.cargando = false;
         console.error(err);
-        this.mostrarAlerta('Error', 'Hubo un problema con el registro.');
+        
+        // Manejo de errores específicos (Ej. Correo duplicado)
+        let mensaje = 'Hubo un problema con el registro.';
+        if (err.error?.errors?.email) {
+          mensaje = 'Este correo electrónico ya está registrado.';
+        } else if (err.error?.errors?.curp) {
+          mensaje = 'Esta CURP ya se encuentra en nuestro sistema.';
+        }
+
+        this.mostrarAlerta('Error de Registro', mensaje);
       }
     });
   }

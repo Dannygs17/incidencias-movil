@@ -10,7 +10,6 @@
 <ion-content class="ion-padding" style="--background: #121212;">
 
   <div *ngIf="usuario.status !== 'approved'" class="pantalla-bloqueo" style="text-align: center; padding-top: 30px;">
-    
     <div style="background: #1e1e1e; width: 90px; height: 90px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;">
       <ion-icon [name]="usuario.status === 'pending' ? 'time-outline' : 'shield-checkmark'" 
                 [color]="usuario.status === 'pending' ? 'warning' : 'primary'"
@@ -33,7 +32,6 @@
         <p style="color: #ccc; font-size: 13px; margin-bottom: 12px; display: flex; align-items: center;">
           <ion-icon name="notifications" color="warning" style="margin-right: 12px; font-size: 18px;"></ion-icon> Notificaciones de avance en tiempo real
         </p>
-       
       </div>
 
       <ion-button expand="block" shape="round" color="primary" (click)="irAPerfil()" style="font-weight: 800; height: 50px;">
@@ -52,81 +50,123 @@
         ESPERANDO APROBACIÓN
       </ion-button>
     </div>
-
   </div>
 
 
   <div [hidden]="usuario.status !== 'approved'">
     
-    <div class="contenedor-foto">
-      <div *ngIf="!fotoCapturada" class="cuadro-vacio" (click)="tomarFoto()">
-        <ion-icon name="camera-outline"></ion-icon>
-        <p>Foto Incidencia</p>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding: 0 10px;">
+      <div [style.background]="pasoActual >= 1 ? 'var(--ion-color-primary)' : '#333'" style="height: 6px; flex: 1; border-radius: 3px; margin: 0 5px; transition: 0.3s;"></div>
+      <div [style.background]="pasoActual >= 2 ? 'var(--ion-color-primary)' : '#333'" style="height: 6px; flex: 1; border-radius: 3px; margin: 0 5px; transition: 0.3s;"></div>
+      <div [style.background]="pasoActual >= 3 ? 'var(--ion-color-primary)' : '#333'" style="height: 6px; flex: 1; border-radius: 3px; margin: 0 5px; transition: 0.3s;"></div>
+    </div>
+
+    <div *ngIf="pasoActual === 1" class="animacion-paso">
+      <h2 style="color: white; font-weight: 800; font-size: 24px; margin-bottom: 5px;">¿Qué sucede?</h2>
+      <p style="color: #888; font-size: 14px; margin-bottom: 25px;">Selecciona la categoría y descríbenos brevemente el problema.</p>
+
+      <ion-list style="background: transparent; margin-bottom: 30px;">
+        <ion-item style="--background: #1e1e1e; --border-radius: 12px; margin-bottom: 15px;">
+          <ion-select label="Categoría del Reporte" 
+                      label-placement="floating" 
+                      [(ngModel)]="reporte.categoria_id"
+                      cancelText="Cancelar"
+                      okText="Seleccionar">
+            <ion-select-option *ngFor="let cat of categorias" [value]="cat.id">
+              {{ cat.nombre }}
+            </ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <div *ngIf="reporte.categoria_id" style="padding: 5px 0 20px 0; text-align: center;">
+          <ng-container *ngFor="let cat of categorias">
+            <div *ngIf="cat.id === reporte.categoria_id" style="display: inline-flex; align-items: center; justify-content: center; background: rgba(var(--ion-color-primary-rgb), 0.1); padding: 10px 20px; border-radius: 30px; border: 1px solid rgba(var(--ion-color-primary-rgb), 0.3);">
+              <span class="material-symbols-outlined" style="font-size: 24px; color: var(--ion-color-primary); margin-right: 10px;">
+                {{ cat.icono }}
+              </span>
+              <span style="color: var(--ion-color-primary); font-weight: bold; font-size: 15px;">
+                {{ cat.nombre }}
+              </span>
+            </div>
+          </ng-container>
+        </div>
+
+        
+        
+        <ion-label position="floating">Descripción detallada</ion-label>
+        <ion-item style="--background: #1e1e1e; --border-radius: 12px;">
+          <ion-textarea 
+            placeholder="Ej: La tubería del drenaje lleva rota desde hace 3 días..." 
+            [(ngModel)]="reporte.descripcion"
+            [autoGrow]="true" 
+            rows="4">
+          </ion-textarea>
+        </ion-item>
+        
+      </ion-list>
+
+      <ion-button expand="block" shape="round" color="primary" (click)="siguientePaso()" 
+                  [disabled]="!reporte.categoria_id || !reporte.descripcion" 
+                  style="font-weight: 800; height: 50px; margin-top: 40px;">
+        CONTINUAR
+        <ion-icon name="arrow-forward-outline" slot="end"></ion-icon>
+      </ion-button>
+    </div>
+
+    <div *ngIf="pasoActual === 2" class="animacion-paso">
+      <h2 style="color: white; font-weight: 800; font-size: 24px; margin-bottom: 5px;">Toma una foto</h2>
+      <p style="color: #888; font-size: 14px; margin-bottom: 25px;">Una imagen vale más que mil palabras y ayuda a la cuadrilla.</p>
+
+      <div class="contenedor-foto" style="margin-bottom: 40px;">
+        <div *ngIf="!fotoCapturada" class="cuadro-vacio" (click)="tomarFoto()">
+          <ion-icon name="camera-outline"></ion-icon>
+          <p>Tocar para abrir cámara</p>
+        </div>
+
+        <div *ngIf="fotoCapturada" class="foto-lista">
+          <img [src]="fotoCapturada" />
+          <ion-button color="danger" (click)="borrarFoto()" size="small">
+            <ion-icon name="trash-outline"></ion-icon> Cambiar Foto
+          </ion-button>
+        </div>
       </div>
 
-      <div *ngIf="fotoCapturada" class="foto-lista">
-        <img [src]="fotoCapturada" />
-        <ion-button color="danger" (click)="borrarFoto()" size="small">
-          <ion-icon name="trash-outline"></ion-icon>
+      <div style="display: flex; gap: 10px; margin-top: auto;">
+        <ion-button fill="outline" shape="round" color="medium" (click)="pasoAnterior()" style="height: 50px; width: 60px;">
+          <ion-icon name="arrow-back-outline" slot="icon-only"></ion-icon>
+        </ion-button>
+        <ion-button expand="block" shape="round" color="primary" (click)="siguientePaso()" 
+                    [disabled]="!fotoCapturada" style="font-weight: 800; height: 50px; flex: 1;">
+          CONTINUAR
+          <ion-icon name="arrow-forward-outline" slot="end"></ion-icon>
         </ion-button>
       </div>
     </div>
 
-    <ion-list style="background: transparent;">
-      
-      <ion-item>
-        <ion-select label="Selecciona Categoria" 
-                    label-placement="stacked" 
-                    [(ngModel)]="reporte.categoria_id"
-                    cancelText="Cancelar"
-                    okText="Seleccionar">
-          
-          <ion-select-option *ngFor="let cat of categorias" [value]="cat.id">
-            {{ cat.nombre }}
-          </ion-select-option>
-          
-        </ion-select>
-      </ion-item>
+    <div *ngIf="pasoActual === 3" class="animacion-paso">
+      <h2 style="color: white; font-weight: 800; font-size: 24px; margin-bottom: 5px;">Confirma el lugar</h2>
+      <p style="color: #888; font-size: 14px; margin-bottom: 25px;">Arrastra el pin rojo al lugar exacto del reporte.</p>
 
-      <div *ngIf="reporte.categoria_id" style="padding: 15px 0; text-align: center;">
-        <ng-container *ngFor="let cat of categorias">
-          <div *ngIf="cat.id === reporte.categoria_id" style="display: inline-flex; align-items: center; justify-content: center; background: rgba(var(--ion-color-primary-rgb), 0.1); padding: 10px 20px; border-radius: 30px; border: 1px solid rgba(var(--ion-color-primary-rgb), 0.3);">
-            <span class="material-symbols-outlined" style="font-size: 28px; color: var(--ion-color-primary); margin-right: 10px;">
-              {{ cat.icono }}
-            </span>
-            <span style="color: var(--ion-color-primary); font-weight: bold; font-size: 16px;">
-              {{ cat.nombre }}
-            </span>
-          </div>
-        </ng-container>
+      <div class="seccion-mapa" style="margin-bottom: 30px;">
+        <div id="mapa-leaflet" class="cuadro-mapa" style="height: 350px;"></div>
+
+        <ion-button fill="clear" size="small" (click)="centrarMapa()" class="btn-gps" style="margin-top: 10px;">
+          <ion-icon slot="start" name="locate"></ion-icon>
+          Actualizar mi ubicación
+        </ion-button>
       </div>
 
-      <ion-item>
-        <ion-label position="stacked">Descripcion</ion-label>
-        <ion-textarea 
-          placeholder="Escribe el problema que estás reportando..." 
-          [(ngModel)]="reporte.descripcion"
-          [autoGrow]="true" 
-          rows="3">
-        </ion-textarea>
-      </ion-item>
-    </ion-list>
-
-    <div class="seccion-mapa">
-      <ion-label class="titulo-mapa">Ubicación Exacta</ion-label>
-      
-      <div id="mapa-leaflet" class="cuadro-mapa"></div>
-
-      <ion-button fill="clear" size="small" (click)="centrarMapa()" class="btn-gps">
-        <ion-icon slot="start" name="locate"></ion-icon>
-        Actualizar mi ubicación
-      </ion-button>
+      <div style="display: flex; gap: 10px;">
+        <ion-button fill="outline" shape="round" color="medium" (click)="pasoAnterior()" style="height: 50px; width: 60px;">
+          <ion-icon name="arrow-back-outline" slot="icon-only"></ion-icon>
+        </ion-button>
+        <ion-button expand="block" shape="round" color="success" (click)="enviarReporte()" 
+                    style="font-weight: 800; height: 50px; flex: 1; --box-shadow: 0 4px 15px rgba(var(--ion-color-success-rgb), 0.4);">
+          <ion-icon slot="start" name="send"></ion-icon>
+          ENVIAR REPORTE
+        </ion-button>
+      </div>
     </div>
-
-    <ion-button expand="block" (click)="enviarReporte()" shape="round" class="ion-margin-top" style="margin-bottom: 30px; height: 50px; font-weight: bold;">
-      <ion-icon slot="start" name="send"></ion-icon>
-      Enviar Reporte
-    </ion-button>
 
   </div>
 

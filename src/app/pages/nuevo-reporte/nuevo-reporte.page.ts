@@ -8,11 +8,12 @@ import { addIcons } from 'ionicons';
 import { 
   cameraOutline, locationOutline, map, locate, send, trashOutline, 
   shieldCheckmark, flash, notifications, ribbon, arrowForwardOutline,
-  timeOutline, hourglassOutline 
+  timeOutline, hourglassOutline, arrowBackOutline, checkmarkCircleOutline // <--- ICONOS EXTRA
 } from 'ionicons/icons';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Geolocation } from '@capacitor/geolocation';
 import { AuthService } from '../../services/auth.service'; 
+import { NgxImageCompressService } from 'ngx-image-compress'; 
 
 import * as L from 'leaflet';
 
@@ -42,18 +43,18 @@ export class NuevoReportePage implements OnInit, AfterViewInit {
   private toastController = inject(ToastController);
   private authService = inject(AuthService); 
   private cdr = inject(ChangeDetectorRef); 
+  private imageCompress = inject(NgxImageCompressService); 
   
   private apiUrl = 'http://localhost:8000/api/incidencias';
 
   usuario: any = { status: '' }; 
-  
-  // NUEVO: Arreglo para guardar las categorías que vienen de Laravel
   categorias: any[] = []; 
-
-  // MODIFICADO: Cambiamos 'categoria' por 'categoria_id' (iniciado en null)
   reporte: any = { categoria_id: null, descripcion: '', latitud: 0, longitud: 0 };
-  
   fotoCapturada: string | undefined;
+  
+  // ---> NUEVO: CONTROL DEL WIZARD <---
+  pasoActual: number = 1; 
+
   map: L.Map | undefined;
   marker: L.Marker | undefined;
 
@@ -61,30 +62,42 @@ export class NuevoReportePage implements OnInit, AfterViewInit {
     addIcons({ 
       cameraOutline, locationOutline, map, locate, send, trashOutline, 
       shieldCheckmark, flash, notifications, ribbon, arrowForwardOutline,
-      timeOutline, hourglassOutline
+      timeOutline, hourglassOutline, arrowBackOutline, checkmarkCircleOutline
     });
   }
 
   ngOnInit() {
-    // NUEVO: Llamamos a la función al abrir la pantalla
     this.cargarCategorias();
   }
 
-  // NUEVO: Función que descarga las categorías reales de tu base de datos
-  cargarCategorias() {
-    // Asegúrate de tener esta ruta abierta en tu api.php de Laravel
-    this.http.get('http://localhost:8000/api/categorias').subscribe({
-      next: (res: any) => {
-        this.categorias = res;
-      },
-      error: (err) => {
-        console.error('Error al cargar categorías', err);
-        this.mostrarToast('No se pudieron cargar las categorías', 'danger');
+  // ---> NUEVO: FUNCIONES DEL WIZARD <---
+  siguientePaso() {
+    if (this.pasoActual < 3) {
+      this.pasoActual++;
+      // Si llegamos al paso 3 (mapa), lo inicializamos
+      if (this.pasoActual === 3) {
+        setTimeout(() => this.initMap(), 400); // 400ms da tiempo a que el HTML renderice el div
       }
+    }
+  }
+
+  pasoAnterior() {
+    if (this.pasoActual > 1) {
+      this.pasoActual--;
+    }
+  }
+
+  cargarCategorias() {
+    this.http.get('http://localhost:8000/api/categorias').subscribe({
+      next: (res: any) => this.categorias = res,
+      error: (err) => this.mostrarToast('No se pudieron cargar las categorías', 'danger')
     });
   }
 
   async ionViewWillEnter() {
+    // Resetear al paso 1 siempre que entra a la pantalla
+    this.pasoActual = 1; 
+    
     const userJson = sessionStorage.getItem('usuario');
     if (userJson) {
       this.usuario = JSON.parse(userJson);
@@ -96,19 +109,13 @@ export class NuevoReportePage implements OnInit, AfterViewInit {
         this.usuario = res;
         sessionStorage.setItem('usuario', JSON.stringify(res));
         this.cdr.detectChanges(); 
-
-        if (res.status === 'approved') {
-          setTimeout(() => this.initMap(), 500);
-        }
       },
       error: (err) => console.error('Error sincronizando', err)
     });
   }
 
   async ngAfterViewInit() {
-    if (this.usuario.status === 'approved') {
-      setTimeout(() => this.initMap(), 800);
-    }
+    // Ya no iniciamos el mapa aquí, lo iniciamos al llegar al Paso 3
   }
 
   async initMap() {
@@ -176,12 +183,16 @@ export class NuevoReportePage implements OnInit, AfterViewInit {
   async tomarFoto() {
     try {
       const image = await Camera.getPhoto({
-        quality: 60,
+        quality: 100, 
         resultType: CameraResultType.DataUrl,
         source: CameraSource.Prompt,
         correctOrientation: true
       });
-      this.fotoCapturada = image.dataUrl;
+
+      if (image.dataUrl) {
+        const compressedImage = await this.imageCompress.compressFile(image.dataUrl, -1, 50, 60);
+        this.fotoCapturada = compressedImage;
+      }
     } catch (e) {}
   }
 
@@ -197,7 +208,6 @@ export class NuevoReportePage implements OnInit, AfterViewInit {
   enviarReporte() {
     if (this.usuario.status !== 'approved') return;
     
-    // MODIFICADO: Ahora validamos que 'categoria_id' exista en lugar de 'categoria'
     if (!this.reporte.categoria_id || !this.reporte.descripcion || !this.fotoCapturada) {
       this.mostrarToast('Faltan datos o la foto', 'warning');
       return;

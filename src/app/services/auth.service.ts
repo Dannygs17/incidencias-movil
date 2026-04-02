@@ -1,44 +1,41 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http'; 
-import { tap } from 'rxjs/operators';
+import { tap, catchError } from 'rxjs/operators';
+import { throwError } from 'rxjs';
 import { Firebase } from './firebase'; 
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
 
+  private router = inject(Router);
+  private http = inject(HttpClient);
+  private firebaseSvc = inject(Firebase);
+
   apiUrl = 'http://localhost:8000/api';
 
-  constructor(private http: HttpClient, private firebaseSvc: Firebase) { }
+  constructor() { }
 
   // --- REGISTRO MANUAL ---
   register(datos: any) {
-    // Al ser FormData, el navegador pone el Content-Type solo
     return this.http.post(`${this.apiUrl}/register`, datos);
   }
 
   // --- LOGIN NORMAL ---
   login(credenciales: any) {
     return this.http.post(`${this.apiUrl}/login`, credenciales).pipe(
-      tap((res: any) => {
-        if (res.access_token) {
-          sessionStorage.setItem('token_seguridad', res.access_token);
-          sessionStorage.setItem('usuario', JSON.stringify(res.user));
-        }
-      })
+      tap((res: any) => this.guardarSesion(res)),
+      catchError(err => this.manejarErrorAuth(err))
     );
   }
 
   // --- LOGIN CON GOOGLE ---
   loginGoogleBackend(datosGoogle: any) {
     return this.http.post(`${this.apiUrl}/login-google`, datosGoogle).pipe(
-      tap((res: any) => {
-        if (res.access_token) {
-          sessionStorage.setItem('token_seguridad', res.access_token);
-          sessionStorage.setItem('usuario', JSON.stringify(res.user));
-        }
-      })
+      tap((res: any) => this.guardarSesion(res)),
+      catchError(err => this.manejarErrorAuth(err))
     );
   }
 
@@ -46,10 +43,12 @@ export class AuthService {
   verificarEstatus() {
     const token = sessionStorage.getItem('token_seguridad');
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
-    return this.http.get(`${this.apiUrl}/user`, { headers });
+    return this.http.get(`${this.apiUrl}/user`, { headers }).pipe(
+      catchError(err => this.manejarErrorAuth(err))
+    );
   }
 
-  // --- VERIFICAR CUENTA (ENVÍO DE INE PARA GOOGLE USERS) ---
+  // --- VERIFICAR CUENTA (ENVÍO DE INE) ---
   verificarCuenta(formData: FormData) {
     const token = sessionStorage.getItem('token_seguridad');
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
@@ -60,24 +59,48 @@ export class AuthService {
   updatePassword(data: any) {
     const token = sessionStorage.getItem('token_seguridad');
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
-    
-    // AQUÍ ESTÁ LA CORRECCIÓN: Apuntamos a la ruta correcta de Laravel
     return this.http.post(`${this.apiUrl}/user/profile/password`, data, { headers });
   }
 
-  // --- LOGOUT SEGURO (Mata rastro en Laravel y Google) ---
+  // --- LOGOUT SEGURO ---
   logout() {
     const token = sessionStorage.getItem('token_seguridad');
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
 
-    // 1. Avisamos a Laravel
-    // Usamos pipe(tap) para limpiar el storage local antes de que el componente lo reciba
     return this.http.post(`${this.apiUrl}/logout`, {}, { headers }).pipe(
       tap(async () => {
-        await this.firebaseSvc.signOut();
-        sessionStorage.clear();
-        localStorage.clear();
+        await this.limpiarTodo();
+      }),
+      catchError(() => {
+        this.limpiarTodo();
+        return throwError(() => 'Sesión cerrada localmente');
       })
     );
+  }
+
+  // ==========================================
+  // FUNCIONES DE APOYO (Lógica interna)
+  // ==========================================
+
+  private guardarSesion(res: any) {
+    if (res.access_token) {
+      sessionStorage.setItem('token_seguridad', res.access_token);
+      sessionStorage.setItem('usuario', JSON.stringify(res.user));
+    }
+  }
+
+  private async limpiarTodo() {
+    await this.firebaseSvc.signOut();
+    sessionStorage.clear();
+    localStorage.clear();
+    this.router.navigate(['/login']);
+  }
+
+  private manejarErrorAuth(err: any) {
+    // Si el error es 403 (Rechazado) o 401 (Token inválido/vencido)
+    if (err.status === 403 || err.status === 401) {
+      this.limpiarTodo();
+    }
+    return throwError(() => err);
   }
 }

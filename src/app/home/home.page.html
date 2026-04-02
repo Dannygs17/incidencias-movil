@@ -10,7 +10,7 @@
 </ion-header>
 
 <ion-content style="--background: #121212;">
-  
+ 
   <ion-refresher slot="fixed" (ionRefresh)="cargarReportes($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
@@ -31,66 +31,79 @@
 
   <div style="padding: 15px;">
     
-    <ion-card *ngFor="let reporte of reportesFiltrados" 
-              [ngStyle]="{'border-left': '4px solid var(--ion-color-' + getColorEstado(reporte.estado) + ')'}"
-              style="margin: 0 0 15px 0; border-radius: 22px; background: #1e1e1e; border-top: 1px solid #2a2a2a; border-right: 1px solid #2a2a2a; border-bottom: 1px solid #2a2a2a; box-shadow: 0 4px 15px rgba(0,0,0,0.3);"
-              (click)="abrirDetalles(reporte)" 
-              button="true">
-      
-      <div style="padding: 20px; text-align: center;">
-        
-        <div [style.background-color]="'rgba(var(--ion-color-primary-rgb), 0.15)'"
-             style="width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto; border: 1px solid rgba(var(--ion-color-primary-rgb), 0.2);">
-          <span class="material-symbols-outlined" style="font-size: 35px; color: var(--ion-color-primary);">
-            {{ reporte.categoria?.icono || 'help' }}
-          </span>
+    <div *ngIf="cargando">
+      <ion-card *ngFor="let item of [1,2,3]" 
+                style="margin: 0 0 15px 0; border-radius: 22px; background: #1e1e1e; border: 1px solid #2a2a2a;">
+        <div style="padding: 20px; text-align: center;">
+          <ion-skeleton-text animated style="width: 70px; height: 70px; border-radius: 50%; margin: 0 auto 12px auto; background: #333;"></ion-skeleton-text>
+          <ion-skeleton-text animated style="width: 60%; height: 20px; margin: 0 auto; background: #333;"></ion-skeleton-text>
+          <ion-skeleton-text animated style="width: 30%; height: 14px; margin: 10px auto; border-radius: 10px; background: #333;"></ion-skeleton-text>
+          <ion-skeleton-text animated style="width: 80%; height: 12px; margin: 15px auto; background: #333;"></ion-skeleton-text>
+          <ion-skeleton-text animated style="width: 100%; height: 40px; border-radius: 14px; background: #333;"></ion-skeleton-text>
         </div>
+      </ion-card>
+    </div>
 
-        <h2 style="font-weight: 800; font-size: 21px; color: white; margin: 0; text-transform: capitalize;">
-          {{ reporte.categoria?.nombre || 'Sin Categoría' }}
-        </h2>
+    <ng-container *ngIf="!cargando">
+      <ion-card *ngFor="let reporte of reportesFiltrados"
+                [ngStyle]="{'border-left': '4px solid var(--ion-color-' + getColorEstado(reporte.estado) + ')'}"
+                style="margin: 0 0 15px 0; border-radius: 22px; background: #1e1e1e; border-top: 1px solid #2a2a2a; border-right: 1px solid #2a2a2a; border-bottom: 1px solid #2a2a2a; box-shadow: 0 4px 15px rgba(0,0,0,0.3);"
+                (click)="abrirDetalles(reporte)"
+                button="true">
         
-        <div style="margin: 8px 0;">
-          <ion-badge [color]="getColorEstado(reporte.estado)" 
-                     style="padding: 6px 14px; border-radius: 10px; font-size: 10px; font-weight: 800; text-transform: uppercase;">
-            {{ reporte.estado }}
-          </ion-badge>
+        <div style="padding: 20px; text-align: center;">
+          <div [style.background-color]="'rgba(var(--ion-color-primary-rgb), 0.15)'"
+               style="width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto; border: 1px solid rgba(var(--ion-color-primary-rgb), 0.2);">
+            <span class="material-symbols-outlined" style="font-size: 35px; color: var(--ion-color-primary);">
+              {{ reporte.categoria?.icono || 'help' }}
+            </span>
+          </div>
+
+          <h2 style="font-weight: 800; font-size: 21px; color: white; margin: 0; text-transform: capitalize;">
+            {{ reporte.categoria?.nombre || 'Sin Categoría' }}
+          </h2>
           
-          <div style="color: #888; font-size: 11px; font-weight: bold; margin-top: 8px;">
-            <ion-icon name="calendar-outline" style="vertical-align: middle; margin-right: 3px; font-size: 14px;"></ion-icon>
-            {{ reporte.created_at | date:'dd/MMM/yyyy, h:mm a' }}
+          <div style="margin: 8px 0;">
+            <ion-badge [color]="getColorEstado(reporte.estado)"
+                       style="padding: 6px 14px; border-radius: 10px; font-size: 10px; font-weight: 800; text-transform: uppercase;">
+              {{ reporte.estado }}
+            </ion-badge>
+            
+            <div style="color: #888; font-size: 11px; font-weight: bold; margin-top: 8px;">
+              <ion-icon name="calendar-outline" style="vertical-align: middle; margin-right: 3px; font-size: 14px;"></ion-icon>
+              {{ reporte.created_at | date:'dd/MMM/yyyy, h:mm a' }}
+            </div>
+          </div>
+
+          <p style="color: #888; font-size: 13px; margin: 10px 0 20px 0; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;">
+            "{{ reporte.descripcion || 'Sin descripción...' }}"
+          </p>
+
+          <div *ngIf="reporte.estado !== 'resuelto'" class="btn-detalles" style="background: rgba(var(--ion-color-primary-rgb), 0.2); color: var(--ion-color-primary); border: 1px solid var(--ion-color-primary); padding: 12px; border-radius: 14px; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <ion-icon name="eye-outline"></ion-icon>
+            VER DETALLES
+          </div>
+          
+          <div *ngIf="reporte.estado === 'resuelto'" class="btn-solucion" style="background: rgba(var(--ion-color-success-rgb), 0.2); color: var(--ion-color-success); border: 1px solid var(--ion-color-success); padding: 12px; border-radius: 14px; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <ion-icon name="checkmark-done-outline"></ion-icon>
+            VER SOLUCIÓN
           </div>
         </div>
+      </ion-card>
 
-        <p style="color: #888; font-size: 13px; margin: 10px 0 20px 0; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;">
-          "{{ reporte.descripcion || 'Sin descripción...' }}"
-        </p>
-
-        <div *ngIf="reporte.estado !== 'resuelto'" style="background: rgba(var(--ion-color-primary-rgb), 0.2); color: var(--ion-color-primary); border: 1px solid var(--ion-color-primary); padding: 12px; border-radius: 14px; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-          <ion-icon name="eye-outline"></ion-icon>
-          VER DETALLES
-        </div>
-        
-        <div *ngIf="reporte.estado === 'resuelto'" style="background: rgba(var(--ion-color-success-rgb), 0.2); color: var(--ion-color-success); border: 1px solid var(--ion-color-success); padding: 12px; border-radius: 14px; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-          <ion-icon name="checkmark-done-outline"></ion-icon>
-          VER SOLUCIÓN
-        </div>
-
+      <div *ngIf="reportesFiltrados.length === 0" style="text-align: center; margin-top: 80px; color: #444;">
+        <ion-icon name="file-tray-outline" style="font-size: 80px;"></ion-icon>
+        <h3 style="font-weight: bold; margin-top: 10px;">No hay reportes en esta sección</h3>
       </div>
-    </ion-card>
+    </ng-container>
 
-    <div *ngIf="reportesFiltrados.length === 0" style="text-align: center; margin-top: 80px; color: #444;">
-      <ion-icon name="file-tray-outline" style="font-size: 80px;"></ion-icon>
-      <h3 style="font-weight: bold; margin-top: 10px;">No hay reportes en esta sección</h3>
-    </div>
   </div>
 
-  <ion-modal [isOpen]="isModalOpen" (didDismiss)="cerrarModal()" 
-             initialBreakpoint="0.85" [breakpoints]="[0, 0.85, 1]"
-             style="--border-radius: 30px 30px 0 0;">
+  <ion-modal [isOpen]="isModalOpen" (didDismiss)="cerrarModal()"
+               initialBreakpoint="0.85" [breakpoints]="[0, 0.85, 1]"
+               style="--border-radius: 30px 30px 0 0;">
     <ng-template>
       <div style="width: 45px; height: 5px; background: #333; border-radius: 10px; margin: 15px auto; display: block;"></div>
-      
       <ion-header class="ion-no-border">
         <ion-toolbar style="--background: transparent;">
           <ion-title style="font-weight: 800; font-size: 20px; color: white;">Información</ion-title>
@@ -101,7 +114,6 @@
       </ion-header>
 
       <ion-content style="--background: #121212;" class="ion-padding">
-        
         <div style="width: 100%; height: 240px; background: #1e1e1e; border-radius: 25px; overflow: hidden; margin-bottom: 20px; border: 1px solid #333;">
           <img *ngIf="reporteSeleccionado?.imagen_url" [src]="reporteSeleccionado.imagen_url" style="width: 100%; height: 100%; object-fit: cover;" />
           <div *ngIf="!reporteSeleccionado?.imagen_url" class="ion-text-center" style="color: #444; margin-top: 70px;">
@@ -114,7 +126,6 @@
           <span class="material-symbols-outlined" style="font-size: 32px; color: var(--ion-color-primary);">
             {{ reporteSeleccionado?.categoria?.icono || 'help' }}
           </span>
-          
           <div>
             <span style="font-size: 10px; color: #666; font-weight: 800; text-transform: uppercase;">Categoría</span>
             <div style="font-weight: 700; font-size: 17px; color: white;">
@@ -129,33 +140,13 @@
             "{{ reporteSeleccionado?.descripcion || 'Sin detalles adicionales.' }}"
           </p>
         </div>
-
+        
         <div *ngIf="reporteSeleccionado?.estado === 'resuelto'" style="background: rgba(var(--ion-color-success-rgb), 0.1); padding: 20px; border-radius: 20px; border: 1px solid rgba(var(--ion-color-success-rgb), 0.3); margin-top: 20px;">
-          
           <h3 style="font-weight: 800; font-size: 13px; margin: 0 0 15px 0; color: var(--ion-color-success); text-transform: uppercase; display: flex; align-items: center; gap: 8px;">
-            <ion-icon name="checkmark-circle-outline" style="font-size: 18px;"></ion-icon> 
-            Respuesta Oficial del Ayuntamiento
+            <ion-icon name="checkmark-circle-outline" style="font-size: 18px;"></ion-icon>
+            Respuesta Oficial
           </h3>
-
-          <div *ngIf="reporteSeleccionado?.evidencia_url" style="width: 100%; height: 200px; border-radius: 15px; overflow: hidden; margin-bottom: 15px; border: 1px solid rgba(var(--ion-color-success-rgb), 0.2);">
-            <img [src]="reporteSeleccionado.evidencia_url" style="width: 100%; height: 100%; object-fit: cover;" />
-          </div>
-
-          <p *ngIf="reporteSeleccionado?.comentario_admin" style="color: #ddd; line-height: 1.6; font-size: 15px; margin: 0; font-style: italic;">
-            "{{ reporteSeleccionado.comentario_admin }}"
-          </p>
-
-          <p *ngIf="!reporteSeleccionado?.evidencia_url && !reporteSeleccionado?.comentario_admin" style="color: #888; font-size: 14px; font-style: italic; margin: 0;">
-            Reporte atendido y cerrado exitosamente por las autoridades.
-          </p>
-          
-        </div>
-
-        <div style="text-align: center; margin-top: 25px; color: #555;">
-          <ion-icon name="time-outline" style="font-size: 18px; vertical-align: middle; margin-right: 5px;"></ion-icon>
-          <span style="font-size: 13px; font-weight: bold;">
-            Enviado el {{ reporteSeleccionado?.created_at | date:'dd' }} de {{ reporteSeleccionado?.created_at | date:'MMMM' }} de {{ reporteSeleccionado?.created_at | date:'yyyy, h:mm a' }}
-          </span>
+          <p style="color: #ddd; font-size: 15px; margin: 0;">{{ reporteSeleccionado?.comentario_admin || 'Atendido con éxito.' }}</p>
         </div>
 
       </ion-content>

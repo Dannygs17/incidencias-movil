@@ -1,74 +1,143 @@
-// 1. CONTENEDOR DE LA FOTO (Estilo de tu dibujo)
+// --- ANIMACIÓN PARA EL CAMBIO DE PASOS ---
+.animacion-paso {
+  animation: fadeIn 0.4s ease-in-out;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// --- 1. CONTENEDOR DE LA FOTO ---
 .contenedor-foto {
-  margin-bottom: 20px;
-  text-align: center; // Centra todo el contenido
+  margin-bottom: 25px;
+  text-align: center; 
   
   .cuadro-vacio {
     width: 100%;
-    max-width: 400px; // Evita que se estire demasiado en monitores anchos
-    height: 150px;
-    border: 2px solid #ccc;
-    margin: 0 auto; // Centra el cuadro en la pantalla
+    max-width: 450px; 
+    height: 160px;
+    border: 2px dashed #444; // Estilo dashed (punteado) se ve mejor para "subir"
+    margin: 0 auto; 
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    background: #f9f9f9;
+    background: #1e1e1e; // Fondo oscuro para combinar
+    border-radius: 18px;
     cursor: pointer;
+    transition: all 0.3s ease;
+
+    &:active {
+      transform: scale(0.98);
+      background: #252525;
+    }
     
-    ion-icon { font-size: 40px; color: #666; }
-    p { margin-top: 5px; color: #666; font-size: 14px; }
+    ion-icon { 
+      font-size: 45px; 
+      color: var(--ion-color-primary); 
+      margin-bottom: 8px;
+    }
+    
+    p { 
+      margin: 0; 
+      color: #888; 
+      font-size: 14px; 
+      font-weight: 600;
+    }
   }
 
   .foto-lista {
     position: relative;
-    display: inline-block; // Para que el contenedor se ajuste al tamaño de la imagen
+    display: inline-block; 
     width: 100%;
-    max-width: 400px; // Limita el ancho en la web
+    max-width: 450px; 
 
     img { 
       width: 100%; 
-      max-height: 250px; // <--- ESTO EVITA QUE OCUPE MUCHA PANTALLA
-      object-fit: cover; // Recorta la imagen para que no se vea estirada
-      border-radius: 8px; 
-      border: 1px solid #ddd;
+      height: 250px; 
+      object-fit: cover; 
+      border-radius: 18px; 
+      border: 1px solid #333;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
     }
 
     ion-button { 
       position: absolute; 
-      top: 5px; 
-      right: 5px; 
-      --padding-start: 8px;
-      --padding-end: 8px;
+      top: 10px; 
+      right: 10px; 
+      --border-radius: 10px;
+      --box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      margin: 0;
     }
   }
 }
 
-
-
+// --- 2. SECCIÓN DEL MAPA ---
 .seccion-mapa {
-  margin-top: 20px;
+  margin-top: 10px;
   
   .titulo-mapa {
-    font-weight: bold;
-    margin-bottom: 10px;
+    font-weight: 800;
+    margin-bottom: 12px;
     display: block;
-    color: #ffffff; // Si estás en modo oscuro
+    color: #ffffff;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
 
-  // ESTILO DEL RECUADRO DEL MAPA
- .cuadro-mapa {
-  width: 100%;
-  height: 200px; /* OBLIGATORIO: Altura fija */
-  background: #e0e0e0;
-  border-radius: 12px;
-  border: 1px solid #333;
-  z-index: 1; /* Para asegurar que se vea */
-  display: block; 
-}
+  .cuadro-mapa {
+    width: 100%;
+    height: 350px; // Aumenté un poco la altura para el Paso 3
+    background: #1e1e1e;
+    border-radius: 20px;
+    border: 1px solid #333;
+    z-index: 1; 
+    display: block; 
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  }
   
   .btn-gps {
-    margin-top: 5px;
-    --color: #3880ff;
+    margin-top: 10px;
+    --color: var(--ion-color-primary);
+    font-weight: bold;
+    font-size: 12px;
   }
+}
+
+// --- 3. ESTILOS GENERALES DE ITEMS ---
+ion-item {
+  --background: #1e1e1e;
+  --border-radius: 14px;
+  --border-color: transparent;
+  --padding-start: 16px;
+  --inner-padding-end: 16px;
+  --color: white;
+  margin-bottom: 15px;
+  border: 1px solid #2a2a2a;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+
+  &.item-has-focus {
+    --border-color: var(--ion-color-primary);
+    border: 1px solid var(--ion-color-primary);
+  }
+}
+
+ion-label {
+  font-weight: 600;
+}
+
+ion-textarea {
+  --padding-top: 10px;
+  --padding-bottom: 10px;
 }

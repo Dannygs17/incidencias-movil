@@ -8,21 +8,10 @@ import { AuthService } from '../../services/auth.service';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { addIcons } from 'ionicons';
 import { 
-  cardOutline, 
-  cameraReverseOutline, 
-  shieldCheckmarkOutline, 
-  cloudUploadOutline, 
-  person, 
-  mailOutline, 
-  lockClosedOutline, 
-  logOutOutline,
-  checkmarkCircle,
-  alertCircleOutline,
-  checkmarkOutline,
-  fingerPrintOutline,
-  timeOutline,
-  lockOpenOutline, // <-- Agregados para el modal de contraseña
-  keyOutline       // <-- Agregados para el modal de contraseña
+  cardOutline, cameraReverseOutline, shieldCheckmarkOutline, cloudUploadOutline, 
+  person, mailOutline, lockClosedOutline, logOutOutline, checkmarkCircle,
+  alertCircleOutline, checkmarkOutline, fingerPrintOutline, timeOutline,
+  lockOpenOutline, keyOutline 
 } from 'ionicons/icons';
 
 @Component({
@@ -35,7 +24,7 @@ import {
 })
 export class PerfilPage implements OnInit {
 
-  usuario: any = { name: '', email: '', curp: '', status: '', photoURL: null };
+  usuario: any = { name: '', email: '', curp: '', status: '', photoURL: null, rejection_reason: '', correction_fields: [] };
   ineFrente: string | null = null;
   ineReverso: string | null = null;
 
@@ -69,13 +58,22 @@ export class PerfilPage implements OnInit {
       this.usuario = JSON.parse(userString);
       const fotoGoogle = sessionStorage.getItem('user_photo');
       if (fotoGoogle) { this.usuario.photoURL = fotoGoogle; }
-      
-      // === LÍNEA MODIFICADA: Ahora es 100% exacto leyendo el método de login ===
       this.usuario.is_google = (sessionStorage.getItem('login_method') === 'google');
-
     } else {
       this.ejecutarCerrarSesion();
+      return;
     }
+
+    this.authService.verificarEstatus().subscribe({
+      next: (userFromDB: any) => {
+        this.usuario.status = userFromDB.status;
+        this.usuario.rejection_reason = userFromDB.rejection_reason;
+        // Obtenemos los campos a corregir del backend
+        this.usuario.correction_fields = userFromDB.correction_fields || []; 
+        sessionStorage.setItem('usuario', JSON.stringify(this.usuario));
+      },
+      error: (err) => console.error('Error al sincronizar estatus:', err)
+    });
   }
 
   calcularPorcentaje() {
@@ -84,6 +82,31 @@ export class PerfilPage implements OnInit {
     if (this.ineFrente) p += 20;
     if (this.ineReverso) p += 20;
     return p;
+  }
+
+  // Define si un campo específico debe mostrarse en la pantalla
+  necesitaCorregir(campo: string): boolean {
+    if (this.usuario.status === 'invitado') return true; 
+    if (this.usuario.status === 'action_required' && this.usuario.correction_fields) {
+      return this.usuario.correction_fields.includes(campo); 
+    }
+    return false;
+  }
+
+  // Verifica que solo los campos solicitados estén llenos para habilitar el botón
+  formularioValido(): boolean {
+    if (this.usuario.status === 'invitado') {
+      return !!(this.usuario.curp && this.usuario.curp.length >= 18 && this.ineFrente && this.ineReverso);
+    }
+    
+    if (this.usuario.status === 'action_required') {
+      if (this.necesitaCorregir('curp') && (!this.usuario.curp || this.usuario.curp.length < 18)) return false;
+      if (this.necesitaCorregir('ine_frente') && !this.ineFrente) return false;
+      if (this.necesitaCorregir('ine_reverso') && !this.ineReverso) return false;
+      
+      return true; 
+    }
+    return false;
   }
 
   async capturarINE(lado: 'frente' | 'reverso') {
@@ -103,20 +126,23 @@ export class PerfilPage implements OnInit {
   }
 
   async enviarADatos() {
-    if(!this.usuario.curp || this.usuario.curp.length < 18){
-      this.mostrarToast('Por favor ingresa una CURP válida', 'warning');
+    if(!this.formularioValido()){
+      this.mostrarToast('Por favor completa todos los campos solicitados', 'warning');
       return;
     }
 
     const loading = await this.loadingController.create({ 
-      message: 'Subiendo archivos reales...',
+      message: 'Enviando actualización...',
       spinner: 'crescent'
     });
     await loading.present();
 
     try {
       const formData = new FormData();
-      formData.append('curp', this.usuario.curp.toUpperCase());
+      
+      if (this.necesitaCorregir('curp')) {
+        formData.append('curp', this.usuario.curp.toUpperCase());
+      }
 
       if (this.ineFrente) {
         const blobFrente = await (await fetch(this.ineFrente)).blob();
@@ -131,11 +157,9 @@ export class PerfilPage implements OnInit {
       this.authService.verificarCuenta(formData).subscribe({
         next: async (res: any) => {
           await loading.dismiss();
-          
           this.ineFrente = null;
           this.ineReverso = null;
           
-          // Sincronización real con la respuesta de Laravel
           if (res.user) {
             this.usuario = res.user;
           } else {
@@ -146,12 +170,11 @@ export class PerfilPage implements OnInit {
 
           const alert = await this.alertController.create({
             header: '¡Hecho!',
-            subHeader: 'Documentación guardada',
-            message: 'Tu información ha sido recibida y ahora tu estatus es PENDIENTE. Un administrador te validará pronto.',
+            subHeader: 'Documentación actualizada',
+            message: 'Tus correcciones han sido enviadas exitosamente. Espera la validación del administrador.',
             buttons: ['Entendido']
           });
           await alert.present();
-          
           this.cargarDatosUsuario();
         },
         error: async (err: any) => {
@@ -167,18 +190,11 @@ export class PerfilPage implements OnInit {
     }
   }
 
-  // ==========================================
-  // LÓGICA DE CONTRASEÑA RECUPERADA
-  // ==========================================
-
   cambiarPassword() {
-    // Validamos que sea ciudadano o approved para permitirle abrir el modal
     if (this.usuario.status !== 'ciudadano' && this.usuario.status !== 'approved') {
       this.mostrarToast('Función solo disponible para usuarios verificados.', 'info');
       return;
     }
-    
-    // Limpiamos los campos antes de abrir el modal
     this.passData = { current_password: '', password: '', password_confirmation: '' };
     this.isModalPasswordOpen = true;
   }
@@ -188,7 +204,6 @@ export class PerfilPage implements OnInit {
       this.mostrarToast('Todos los campos son obligatorios', 'warning');
       return;
     }
-
     if (this.passData.password !== this.passData.password_confirmation) {
       this.mostrarToast('Las nuevas contraseñas no coinciden', 'danger');
       return;
@@ -205,10 +220,6 @@ export class PerfilPage implements OnInit {
       }
     });
   }
-
-  // ==========================================
-  // UTILIDADES
-  // ==========================================
 
   async mostrarToast(mensaje: string, color: string) {
     const toast = await this.toastController.create({ message: mensaje, duration: 2000, color: color, position: 'bottom' });

@@ -10,13 +10,12 @@
     <div style="position: relative; width: 110px; height: 110px; margin: 0 auto 15px auto;">
       <ion-avatar style="width: 100%; height: 100%; border: 4px solid #1e1e1e; box-shadow: 0 8px 20px rgba(0,0,0,0.4); background: #1e1e1e; display: flex; align-items: center; justify-content: center; overflow: hidden;">
         <img *ngIf="usuario.photoURL" [src]="usuario.photoURL" (error)="usuario.photoURL = null" style="object-fit: cover; width: 100%; height: 100%;" />
-
         <ion-icon *ngIf="!usuario.photoURL" name="person" style="font-size: 65px; color: #444;"></ion-icon>
       </ion-avatar>
       
-      <div [style.background]="usuario.status === 'invitado' ? '#ffc409' : (usuario.status === 'pending' ? '#3880ff' : '#2dd36f')" 
+      <div [style.background]="(usuario.status === 'invitado' || usuario.status === 'action_required') ? '#ffc409' : (usuario.status === 'pending' ? '#3880ff' : '#2dd36f')" 
            style="position: absolute; bottom: 5px; right: 5px; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 3px solid #1e1e1e;">
-        <ion-icon [name]="usuario.status === 'invitado' ? 'alert-circle-outline' : (usuario.status === 'pending' ? 'time-outline' : 'checkmark-outline')" 
+        <ion-icon [name]="(usuario.status === 'invitado' || usuario.status === 'action_required') ? 'alert-circle-outline' : (usuario.status === 'pending' ? 'time-outline' : 'checkmark-outline')" 
                   style="color: white; font-size: 16px; font-weight: bold;"></ion-icon>
       </div>
     </div>
@@ -26,23 +25,38 @@
     <p style="color: rgba(255,255,255,0.6); font-size: 14px; margin-top: 5px; letter-spacing: 1px; text-transform: uppercase; font-weight: 600;">
       <span *ngIf="usuario.status === 'invitado'">Usuario Invitado</span>
       <span *ngIf="usuario.status === 'pending'" style="color: #3880ff;">Verificación en revisión</span>
-      <span *ngIf="usuario.status === 'ciudadano' || usuario.status === 'approved'">Ciudadano Verificado</span>
+      <span *ngIf="usuario.status === 'action_required'" style="color: #ffc409;">Acción Requerida</span>
+      <span *ngIf="usuario.status === 'ciudadano' || usuario.status === 'approved'" style="color: #2dd36f;">Ciudadano Verificado</span>
     </p>
   </div>
 
-  <div *ngIf="usuario.status === 'invitado'" style="padding: 0 20px;">
+  <div *ngIf="usuario.status === 'action_required'" style="padding: 0 20px;">
+    <div style="background: rgba(255, 196, 9, 0.1); border-radius: 20px; padding: 20px; border: 1px solid #ffc409; margin-bottom: 20px; text-align: center;">
+      <ion-icon name="alert-circle-outline" style="font-size: 45px; color: #ffc409;"></ion-icon>
+      <h3 style="color: white; font-weight: 800; margin: 10px 0;">Atención Requerida</h3>
+      <p style="color: #ccc; font-size: 13px;">El administrador dejó una observación sobre tus documentos:</p>
+      
+      <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; margin: 15px 0;">
+        <p style="color: #ffc409; font-weight: bold; font-style: italic; margin: 0;">"{{ usuario.rejection_reason }}"</p>
+      </div>
+      
+      <p style="color: #888; font-size: 12px;">Por favor, vuelve a capturar los datos solicitados abajo.</p>
+    </div>
+  </div>
+
+  <div *ngIf="usuario.status === 'invitado' || usuario.status === 'action_required'" style="padding: 0 20px;">
     <div style="background: #1e1e1e; border-radius: 20px; padding: 20px; border: 1px solid #333; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+      
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
         <ion-label style="color: white; font-weight: 800; font-size: 11px; letter-spacing: 1px;">PROGRESO DE VERIFICACIÓN</ion-label>
         <ion-badge color="warning" style="font-weight: 800;">{{ calcularPorcentaje() }}%</ion-badge>
       </div>
-      
       <div style="width: 100%; height: 10px; background: #333; border-radius: 10px; overflow: hidden; margin-bottom: 20px;">
         <div [style.width]="calcularPorcentaje() + '%'" 
              style="height: 100%; background: linear-gradient(to right, #ffc409, #2dd36f); transition: 0.6s cubic-bezier(0.32, 0.94, 0.6, 1);"></div>
       </div>
 
-      <ion-item style="--background: #121212; border-radius: 12px; margin-bottom: 15px; border: 1px solid #333; --padding-start: 10px;">
+      <ion-item *ngIf="necesitaCorregir('curp')" style="--background: #121212; border-radius: 12px; margin-bottom: 15px; border: 1px solid #333; --padding-start: 10px;">
         <ion-icon name="finger-print-outline" slot="start" color="warning"></ion-icon>
         <ion-input [(ngModel)]="usuario.curp" 
                    placeholder="Escribe tu CURP" 
@@ -51,13 +65,13 @@
         </ion-input>
       </ion-item>
 
-      <p style="color: #888; font-size: 12px; margin-bottom: 15px; line-height: 1.4;">
-        Captura tu identificación para desbloquear los reportes ciudadanos.
+      <p *ngIf="necesitaCorregir('ine_frente') || necesitaCorregir('ine_reverso')" style="color: #888; font-size: 12px; margin-bottom: 15px; line-height: 1.4;">
+        Captura tu identificación para la validación de cuenta.
       </p>
 
       <ion-grid class="ion-no-padding">
         <ion-row>
-          <ion-col size="6" style="padding-right: 6px;">
+          <ion-col *ngIf="necesitaCorregir('ine_frente')" [size]="necesitaCorregir('ine_reverso') ? '6' : '12'" [style.padding-right]="necesitaCorregir('ine_reverso') ? '6px' : '0px'">
             <div (click)="capturarINE('frente')" 
                  style="height: 100px; border: 2px dashed #444; border-radius: 14px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #121212; position: relative;">
               <img *ngIf="ineFrente" [src]="ineFrente" style="width: 100%; height: 100%; object-fit: cover;" />
@@ -69,7 +83,7 @@
             </div>
           </ion-col>
           
-          <ion-col size="6" style="padding-left: 6px;">
+          <ion-col *ngIf="necesitaCorregir('ine_reverso')" [size]="necesitaCorregir('ine_frente') ? '6' : '12'" [style.padding-left]="necesitaCorregir('ine_frente') ? '6px' : '0px'">
             <div (click)="capturarINE('reverso')" 
                  style="height: 100px; border: 2px dashed #444; border-radius: 14px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #121212; position: relative;">
               <img *ngIf="ineReverso" [src]="ineReverso" style="width: 100%; height: 100%; object-fit: cover;" />
@@ -83,14 +97,14 @@
         </ion-row>
       </ion-grid>
 
-      <ion-button *ngIf="ineFrente && ineReverso && usuario.curp?.length >= 18" 
+      <ion-button *ngIf="formularioValido()" 
                   (click)="enviarADatos()" 
                   expand="block" 
                   color="success" 
                   mode="ios" 
                   style="margin-top: 20px; font-weight: 800; --border-radius: 14px; height: 50px;">
         <ion-icon name="cloud-upload-outline" slot="start"></ion-icon>
-        ENVIAR DOCUMENTACIÓN
+        {{ usuario.status === 'invitado' ? 'ENVIAR DOCUMENTACIÓN' : 'ENVIAR CORRECCIÓN' }}
       </ion-button>
     </div>
   </div>
@@ -99,7 +113,7 @@
     <div style="background: rgba(56, 128, 255, 0.1); border-radius: 20px; padding: 20px; border: 1px solid #3880ff; margin-bottom: 20px; text-align: center;">
       <ion-icon name="time-outline" style="font-size: 40px; color: #3880ff;"></ion-icon>
       <h3 style="color: white; font-weight: 800; margin: 10px 0;">Validación en curso</h3>
-      <p style="color: #ccc; font-size: 13px;">Estamos revisando tu CURP y fotografías. Te notificaremos cuando puedas realizar reportes.</p>
+      <p style="color: #ccc; font-size: 13px;">Estamos revisando tus datos. Te notificaremos cuando puedas realizar reportes.</p>
     </div>
   </div>
 
@@ -128,7 +142,6 @@
   </div>
 
   <div style="padding: 25px 20px;">
-    
     <ion-button *ngIf="(usuario.status === 'ciudadano' || usuario.status === 'approved') && !usuario.is_google" expand="block" mode="ios" fill="clear" style="--color: #888; font-weight: bold;" (click)="cambiarPassword()">
       <ion-icon name="lock-closed-outline" slot="start"></ion-icon>
       Cambiar Contraseña
@@ -157,22 +170,18 @@
 
       <ion-content style="--background: #121212;" class="ion-padding">
         <div style="background: #1e1e1e; padding: 20px; border-radius: 20px; border: 1px solid #2a2a2a;">
-          
           <ion-item lines="none" style="--background: #121212; border-radius: 12px; margin-bottom: 15px; border: 1px solid #333;">
             <ion-icon name="lock-open-outline" slot="start" color="primary"></ion-icon>
             <ion-input [(ngModel)]="passData.current_password" type="password" [passwordToggle]="true" placeholder="Contraseña actual"></ion-input>
           </ion-item>
-
           <ion-item lines="none" style="--background: #121212; border-radius: 12px; margin-bottom: 15px; border: 1px solid #333;">
             <ion-icon name="key-outline" slot="start" color="primary"></ion-icon>
             <ion-input [(ngModel)]="passData.password" type="password" [passwordToggle]="true" placeholder="Nueva contraseña"></ion-input>
           </ion-item>
-
           <ion-item lines="none" style="--background: #121212; border-radius: 12px; margin-bottom: 25px; border: 1px solid #333;">
             <ion-icon name="shield-checkmark-outline" slot="start" color="primary"></ion-icon>
             <ion-input [(ngModel)]="passData.password_confirmation" type="password" [passwordToggle]="true" placeholder="Confirmar contraseña"></ion-input>
           </ion-item>
-
           <ion-button expand="block" mode="ios" (click)="guardarNuevaPassword()" style="--border-radius: 14px; height: 50px; font-weight: 800; box-shadow: 0 4px 15px rgba(var(--ion-color-primary-rgb), 0.3);">
             ACTUALIZAR AHORA
           </ion-button>

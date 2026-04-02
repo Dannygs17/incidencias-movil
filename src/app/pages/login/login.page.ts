@@ -31,7 +31,6 @@ export class LoginPage implements OnInit {
 
   ngOnInit() { }
 
-  // --- REDIRECCIÓN A REGISTRO ---
   irARegistro() {
     this.router.navigate(['/register']);
   }
@@ -57,51 +56,48 @@ export class LoginPage implements OnInit {
           photoURL: res.user.photoURL || null 
         };
 
-        // 3. Enviamos a Laravel para autenticar en el Backend
+        // 3. Enviamos a Laravel para autenticar
         this.authService.loginGoogleBackend(googleData).subscribe({
           next: async (laravelRes: any) => {
             await loading.dismiss();
 
-            // === LÍNEA AGREGADA: Dejamos la marca de que entró con Google ===
             sessionStorage.setItem('login_method', 'google');
 
-            // Guardamos la foto en local para acceso rápido si existe
             if (googleData.photoURL) {
               sessionStorage.setItem('user_photo', googleData.photoURL);
             }
 
-            // Redirigimos al Home (AuthService ya guardó token y usuario)
             this.router.navigate(['/tabs/home']); 
           },
           error: async (err) => {
             await loading.dismiss();
             
-            // --- LIMPIEZA CLAVE PARA EVITAR BUGS ---
-            // Si Laravel falla (ej. borraste al usuario de la DB), 
-            // cerramos sesión en Firebase para que no quede "colgada".
+            // SI LARAVEL RECHAZA (403), LIMPIAMOS FIREBASE INMEDIATAMENTE
             await this.firebaseSvc.signOut(); 
             
-            console.error('Error Laravel:', err);
+            let msg = 'Tu cuenta no está registrada o fue eliminada.';
+            if (err.status === 403) {
+                // Aquí capturamos el mensaje de "Cuenta bloqueada/rechazada" de Laravel
+                msg = err.error.message || 'Tu acceso ha sido revocado por el administrador.';
+            }
+
             const alert = await this.alertController.create({
               header: 'Acceso Denegado',
-              message: 'Tu cuenta no está registrada o fue eliminada de nuestro sistema.',
+              message: msg,
               buttons: ['Entendido']
             });
             await alert.present();
           }
         });
       }
-    } catch (error: any) { // <-- Se agregó el ": any" para poder leer el código de error
-      console.error('Error Firebase:', error);
-      
-      // --- BLOQUE AGREGADO: Ignorar errores de cancelación ---
+    } catch (error: any) {
       if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
-        return; // Detiene la ejecución sin mostrar la alerta
+        return; 
       }
       
       const alert = await this.alertController.create({
         header: 'Error Google',
-        message: 'Se canceló el inicio de sesión o hubo un problema con el popup.',
+        message: 'Hubo un problema al conectar con Google.',
         buttons: ['OK']
       });
       await alert.present();
@@ -120,13 +116,9 @@ export class LoginPage implements OnInit {
       next: async (res: any) => {
         await loading.dismiss();
         
-        // === LÍNEA AGREGADA: Dejamos la marca de que entró normal ===
         sessionStorage.setItem('login_method', 'normal');
-
-        // Limpiamos rastro de fotos de google previas si entramos con cuenta normal
         sessionStorage.removeItem('user_photo');
         
-        // Redirigimos al Home
         this.router.navigate(['/tabs/home']); 
       },
       error: async (err) => {
@@ -136,8 +128,8 @@ export class LoginPage implements OnInit {
         let message = 'No se pudo conectar con el servidor.';
 
         if (err.status === 403) {
-          header = 'Estado de Cuenta';
-          message = err.error.message || 'Tu cuenta está en revisión o rechazada.';
+          header = 'Cuenta Bloqueada';
+          message = err.error.message || 'Tu acceso ha sido revocado permanentemente.';
         } else if (err.status === 401) {
           header = 'Credenciales Incorrectas';
           message = 'El correo o la contraseña no coinciden.';
