@@ -1,14 +1,14 @@
 import { Component, OnInit, AfterViewInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule, AlertController, ToastController } from '@ionic/angular'; 
+import { IonicModule, AlertController, ToastController, LoadingController } from '@ionic/angular';
 import { Router } from '@angular/router'; 
 import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
 import { addIcons } from 'ionicons';
 import { 
   cameraOutline, locationOutline, map, locate, send, trashOutline, 
   shieldCheckmark, flash, notifications, ribbon, arrowForwardOutline,
-  timeOutline, hourglassOutline, arrowBackOutline, checkmarkCircleOutline // <--- ICONOS EXTRA
+  timeOutline, hourglassOutline, arrowBackOutline, checkmarkCircleOutline
 } from 'ionicons/icons';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Geolocation } from '@capacitor/geolocation';
@@ -41,6 +41,7 @@ export class NuevoReportePage implements OnInit, AfterViewInit {
   private router = inject(Router);
   private alertController = inject(AlertController);
   private toastController = inject(ToastController);
+  private loadingController = inject(LoadingController);
   private authService = inject(AuthService); 
   private cdr = inject(ChangeDetectorRef); 
   private imageCompress = inject(NgxImageCompressService); 
@@ -52,7 +53,6 @@ export class NuevoReportePage implements OnInit, AfterViewInit {
   reporte: any = { categoria_id: null, descripcion: '', latitud: 0, longitud: 0 };
   fotoCapturada: string | undefined;
   
-  // ---> NUEVO: CONTROL DEL WIZARD <---
   pasoActual: number = 1; 
 
   map: L.Map | undefined;
@@ -70,13 +70,11 @@ export class NuevoReportePage implements OnInit, AfterViewInit {
     this.cargarCategorias();
   }
 
-  // ---> NUEVO: FUNCIONES DEL WIZARD <---
   siguientePaso() {
     if (this.pasoActual < 3) {
       this.pasoActual++;
-      // Si llegamos al paso 3 (mapa), lo inicializamos
       if (this.pasoActual === 3) {
-        setTimeout(() => this.initMap(), 400); // 400ms da tiempo a que el HTML renderice el div
+        setTimeout(() => this.initMap(), 400); 
       }
     }
   }
@@ -95,7 +93,6 @@ export class NuevoReportePage implements OnInit, AfterViewInit {
   }
 
   async ionViewWillEnter() {
-    // Resetear al paso 1 siempre que entra a la pantalla
     this.pasoActual = 1; 
     
     const userJson = sessionStorage.getItem('usuario');
@@ -114,9 +111,7 @@ export class NuevoReportePage implements OnInit, AfterViewInit {
     });
   }
 
-  async ngAfterViewInit() {
-    // Ya no iniciamos el mapa aquí, lo iniciamos al llegar al Paso 3
-  }
+  async ngAfterViewInit() { }
 
   async initMap() {
     const container = document.getElementById('mapa-leaflet');
@@ -205,24 +200,46 @@ export class NuevoReportePage implements OnInit, AfterViewInit {
     t.present();
   }
 
-  enviarReporte() {
+  async enviarReporte() {
     if (this.usuario.status !== 'approved') return;
     
     if (!this.reporte.categoria_id || !this.reporte.descripcion || !this.fotoCapturada) {
       this.mostrarToast('Faltan datos o la foto', 'warning');
       return;
     }
+
+    const loading = await this.loadingController.create({
+      message: 'Subiendo evidencia y creando reporte...',
+      spinner: 'crescent',
+      mode: 'ios'
+    });
+    await loading.present();
     
     const token = sessionStorage.getItem('token_seguridad');
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
     const body = { ...this.reporte, imagen: this.fotoCapturada };
 
     this.http.post(this.apiUrl, body, { headers }).subscribe({
-      next: () => {
+      next: async () => {
+        await loading.dismiss(); 
         this.mostrarToast('Reporte enviado con éxito', 'success');
+
+        // ---> LIMPIEZA DEL FORMULARIO <---
+        this.reporte = { categoria_id: null, descripcion: '', latitud: 0, longitud: 0 };
+        this.fotoCapturada = undefined;
+        this.pasoActual = 1;
+        
+        if (this.map && this.marker) {
+          this.map.removeLayer(this.marker);
+          this.marker = undefined;
+        }
+
         this.router.navigate(['/tabs/home']);
       },
-      error: () => this.mostrarToast('Error al conectar con el servidor', 'danger')
+      error: async () => {
+        await loading.dismiss(); 
+        this.mostrarToast('Error al conectar con el servidor', 'danger');
+      }
     });
   }
 

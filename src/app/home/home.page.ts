@@ -18,7 +18,10 @@ export class HomePage {
   misReportes: any[] = [];
   reportesFiltrados: any[] = [];
   filtroActual: string = 'todos';
-  cargando: boolean = true; // <--- NUEVO: Control de esqueleto
+  cargando: boolean = true; 
+
+  // <--- NUEVO: CONTROL DE CONTEOS
+  conteos = { todos: 0, activos: 0, resueltos: 0 };
 
   isModalOpen = false;
   reporteSeleccionado: any = null;
@@ -30,7 +33,7 @@ export class HomePage {
   ) {}
 
   ionViewWillEnter() {
-    this.cargando = true; // Mostramos esqueleto al entrar
+    this.cargando = true; 
     this.authService.verificarEstatus().subscribe({
       next: (res: any) => {
         this.cargarReportes();
@@ -43,14 +46,20 @@ export class HomePage {
   }
 
   cargarReportes(event?: any) {
-    // Si no es un "pull-to-refresh", activamos el cargando
     if (!event) this.cargando = true;
 
     this.incidenciaService.getMisReportes().subscribe({
+      // LE QUITAMOS LOS CORCHETES AQUÍ ABAJO (cambiamos any[] por any)
       next: (res: any) => {
         this.misReportes = res;
+        
+        // CÁLCULO DINÁMICO DE CONTEOS
+        this.conteos.todos = res.length;
+        this.conteos.activos = res.filter((r: any) => r.estado !== 'resuelto').length;
+        this.conteos.resueltos = res.filter((r: any) => r.estado === 'resuelto').length;
+
         this.filtrar(); 
-        this.cargando = false; // <--- Ocultamos esqueleto
+        this.cargando = false; 
         if (event) event.target.complete();
       },
       error: (err: any) => {
@@ -60,6 +69,8 @@ export class HomePage {
       }
     });
   }
+
+ 
 
   filtrar() {
     if (this.filtroActual === 'todos') {

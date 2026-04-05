@@ -1,2 +1,84 @@
-// For information on how to create your own theme, please refer to:
-// https://ionicframework.com/docs/theming/
+/* =======================================================
+   PALETA "INCIDENCIAS SMART"
+   ======================================================= */
+:root {
+  /** primary: Azul Cobalto Profundo (Cabeceras y Botones Principales) **/
+  --ion-color-primary: #0033FF;
+  --ion-color-primary-rgb: 0, 51, 255;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-shade: #002de0;
+  --ion-color-primary-tint: #1a47ff;
+
+  /** secondary: Azul de Interacción **/
+  --ion-color-secondary: #007BFF;
+  --ion-color-secondary-rgb: 0, 123, 255;
+  --ion-color-secondary-contrast: #ffffff;
+  --ion-color-secondary-shade: #006ce0;
+  --ion-color-secondary-tint: #1a88ff;
+
+  /** success: Verde Esmeralda (Estado Resuelto) **/
+  --ion-color-success: #1ABC9C;
+  --ion-color-success-rgb: 26, 188, 156;
+  --ion-color-success-contrast: #ffffff;
+  --ion-color-success-shade: #17a589;
+  --ion-color-success-tint: #31c3a6;
+
+  /** warning: Ámbar de Precaución (Estado En Proceso) **/
+  --ion-color-warning: #F39C12;
+  --ion-color-warning-rgb: 243, 156, 18;
+  --ion-color-warning-contrast: #ffffff;
+  --ion-color-warning-shade: #d68910;
+  --ion-color-warning-tint: #f4a62a;
+
+  /** danger: Carmesí de Alerta (Estado Pendiente / Error) **/
+  --ion-color-danger: #E74C3C;
+  --ion-color-danger-rgb: 231, 76, 60;
+  --ion-color-danger-contrast: #ffffff;
+  --ion-color-danger-shade: #cb4335;
+  --ion-color-danger-tint: #e95e50;
+
+  /** dark: Gris Carbón Profundo (Textos oscuros o fondos) **/
+  --ion-color-dark: #212121;
+  --ion-color-dark-rgb: 33, 33, 33;
+  --ion-color-dark-contrast: #ffffff;
+  --ion-color-dark-shade: #1d1d1d;
+  --ion-color-dark-tint: #373737;
+
+  /** medium: Gris de Línea **/
+  --ion-color-medium: #B0BEC5;
+  --ion-color-medium-rgb: 176, 190, 197;
+  --ion-color-medium-contrast: #000000;
+  --ion-color-medium-shade: #9ba7ad;
+  --ion-color-medium-tint: #b8c4cb;
+
+  /** light: Gris Niebla Muy Claro **/
+  --ion-color-light: #F5F8FA;
+  --ion-color-light-rgb: 245, 248, 250;
+  --ion-color-light-contrast: #000000;
+  --ion-color-light-shade: #d8dade;
+  --ion-color-light-tint: #f6f9fb;
+}
+
+
+
+/* =======================================================
+   MODO OSCURO AUTOMÁTICO (Escucha al sistema)
+   ======================================================= */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Fondo general de la app (Tu Gris Carbón Profundo) */
+    --ion-background-color: #212121;
+    --ion-background-color-rgb: 33, 33, 33;
+
+    /* Color del texto (Tu Gris Niebla para que contraste bien) */
+    --ion-text-color: #F5F8FA;
+    --ion-text-color-rgb: 245, 248, 250;
+
+    /* Fondos para las tarjetas y modales (Un gris sutilmente más claro) */
+    --ion-item-background: #2A2A2A;
+    --ion-card-background: #2A2A2A;
+
+    /* Color de las líneas separadoras */
+    --ion-border-color: #383838;
+  }
+}

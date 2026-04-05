@@ -1,35 +1,35 @@
-<ion-header>
+<ion-header class="ion-no-border">
   <ion-toolbar color="primary">
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/tabs/home"></ion-back-button>
     </ion-buttons>
-    <ion-title>Nuevo Reporte</ion-title>
+    <ion-title style="font-weight: 800;">Nuevo Reporte</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding" style="--background: #121212;">
+<ion-content class="ion-padding">
 
   <div *ngIf="usuario.status !== 'approved'" class="pantalla-bloqueo" style="text-align: center; padding-top: 30px;">
-    <div style="background: #1e1e1e; width: 90px; height: 90px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;">
-      <ion-icon [name]="usuario.status === 'pending' ? 'time-outline' : 'shield-checkmark'" 
+    <div style="background: rgba(var(--ion-color-medium-rgb), 0.1); width: 90px; height: 90px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; border: 1px solid var(--ion-border-color);">
+      <ion-icon [name]="usuario.status === 'pending' ? 'time-outline' : 'shield-checkmark-outline'" 
                 [color]="usuario.status === 'pending' ? 'warning' : 'primary'"
                 style="font-size: 50px;"></ion-icon>
     </div>
 
     <div *ngIf="usuario.status !== 'pending'">
-      <h2 style="font-weight: 800; color: white; margin-bottom: 15px; font-size: 22px;">¡Tu voz tiene poder!</h2>
-      <p style="color: #aaa; line-height: 1.5; margin-bottom: 25px; font-size: 14px;">
+      <h2 style="font-weight: 800; margin-bottom: 15px; font-size: 22px;">¡Tu voz tiene poder!</h2>
+      <p style="color: var(--ion-color-medium); line-height: 1.5; margin-bottom: 25px; font-size: 14px;">
         Para que tus reportes tengan validez oficial y seguimiento prioritario, solo necesitamos verificar tu identidad.
       </p>
 
-      <div style="background: #1e1e1e; border-radius: 20px; padding: 20px; text-align: left; margin-bottom: 30px;">
+      <div style="background: rgba(var(--ion-color-primary-rgb), 0.05); border-radius: 20px; padding: 20px; text-align: left; margin-bottom: 30px; border: 1px solid var(--ion-border-color);">
         <h4 style="color: var(--ion-color-primary); font-size: 12px; font-weight: 800; letter-spacing: 1px; margin-top: 0; margin-bottom: 15px; text-transform: uppercase;">
           Beneficios de verificarte:
         </h4>
-        <p style="color: #ccc; font-size: 13px; margin-bottom: 12px; display: flex; align-items: center;">
+        <p style="color: var(--ion-text-color); font-size: 13px; margin-bottom: 12px; display: flex; align-items: center; opacity: 0.8;">
           <ion-icon name="flash" color="warning" style="margin-right: 12px; font-size: 18px;"></ion-icon> Atención prioritaria del Ayuntamiento
         </p>
-        <p style="color: #ccc; font-size: 13px; margin-bottom: 12px; display: flex; align-items: center;">
+        <p style="color: var(--ion-text-color); font-size: 13px; margin-bottom: 12px; display: flex; align-items: center; opacity: 0.8;">
           <ion-icon name="notifications" color="warning" style="margin-right: 12px; font-size: 18px;"></ion-icon> Notificaciones de avance en tiempo real
         </p>
       </div>
@@ -40,8 +40,8 @@
     </div>
 
     <div *ngIf="usuario.status === 'pending'">
-      <h2 style="font-weight: 800; color: white; margin-bottom: 15px; font-size: 22px;">Validación en curso</h2>
-      <p style="color: #aaa; line-height: 1.5; margin-bottom: 30px; font-size: 14px;">
+      <h2 style="font-weight: 800; margin-bottom: 15px; font-size: 22px;">Validación en curso</h2>
+      <p style="color: var(--ion-color-medium); line-height: 1.5; margin-bottom: 30px; font-size: 14px;">
         Estamos revisando tu documentación. En cuanto un administrador apruebe tu perfil, este formulario se activará automáticamente.
       </p>
 
@@ -56,31 +56,34 @@
   <div [hidden]="usuario.status !== 'approved'">
     
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding: 0 10px;">
-      <div [style.background]="pasoActual >= 1 ? 'var(--ion-color-primary)' : '#333'" style="height: 6px; flex: 1; border-radius: 3px; margin: 0 5px; transition: 0.3s;"></div>
-      <div [style.background]="pasoActual >= 2 ? 'var(--ion-color-primary)' : '#333'" style="height: 6px; flex: 1; border-radius: 3px; margin: 0 5px; transition: 0.3s;"></div>
-      <div [style.background]="pasoActual >= 3 ? 'var(--ion-color-primary)' : '#333'" style="height: 6px; flex: 1; border-radius: 3px; margin: 0 5px; transition: 0.3s;"></div>
+      <div [style.background]="pasoActual >= 1 ? 'var(--ion-color-primary)' : 'var(--ion-color-medium)'" style="height: 6px; flex: 1; border-radius: 3px; margin: 0 5px; transition: 0.3s; opacity: 0.3;"></div>
+      <div [style.background]="pasoActual >= 2 ? 'var(--ion-color-primary)' : 'var(--ion-color-medium)'" style="height: 6px; flex: 1; border-radius: 3px; margin: 0 5px; transition: 0.3s; opacity: 0.3;"></div>
+      <div [style.background]="pasoActual >= 3 ? 'var(--ion-color-primary)' : 'var(--ion-color-medium)'" style="height: 6px; flex: 1; border-radius: 3px; margin: 0 5px; transition: 0.3s; opacity: 0.3;"></div>
     </div>
 
     <div *ngIf="pasoActual === 1" class="animacion-paso">
-      <h2 style="color: white; font-weight: 800; font-size: 24px; margin-bottom: 5px;">¿Qué sucede?</h2>
-      <p style="color: #888; font-size: 14px; margin-bottom: 25px;">Selecciona la categoría y descríbenos brevemente el problema.</p>
+      <h2 style="font-weight: 800; font-size: 24px; margin-bottom: 5px;">¿Qué sucede?</h2>
+      <p style="color: var(--ion-color-medium); font-size: 14px; margin-bottom: 25px;">Selecciona la categoría y descríbenos brevemente el problema.</p>
 
       <ion-list style="background: transparent; margin-bottom: 30px;">
-        <ion-item style="--background: #1e1e1e; --border-radius: 12px; margin-bottom: 15px;">
+        
+        <ion-item mode="md" style="--border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--ion-border-color); --background: var(--ion-item-background, var(--ion-color-light)); --padding-start: 10px;">
           <ion-select label="Categoría del Reporte" 
-                      label-placement="floating" 
+                      label-placement="stacked" 
                       [(ngModel)]="reporte.categoria_id"
                       cancelText="Cancelar"
-                      okText="Seleccionar">
+                      okText="Seleccionar"
+                      placeholder="Selecciona una opción"
+                      style="color: var(--ion-text-color);">
             <ion-select-option *ngFor="let cat of categorias" [value]="cat.id">
               {{ cat.nombre }}
             </ion-select-option>
           </ion-select>
         </ion-item>
 
-        <div *ngIf="reporte.categoria_id" style="padding: 5px 0 20px 0; text-align: center;">
+        <div *ngIf="reporte.categoria_id" style="padding: 0 0 20px 0; text-align: center;">
           <ng-container *ngFor="let cat of categorias">
-            <div *ngIf="cat.id === reporte.categoria_id" style="display: inline-flex; align-items: center; justify-content: center; background: rgba(var(--ion-color-primary-rgb), 0.1); padding: 10px 20px; border-radius: 30px; border: 1px solid rgba(var(--ion-color-primary-rgb), 0.3);">
+            <div *ngIf="cat.id === reporte.categoria_id" style="display: inline-flex; align-items: center; justify-content: center; background: rgba(var(--ion-color-primary-rgb), 0.1); padding: 10px 20px; border-radius: 30px; border: 1px solid var(--ion-color-primary);">
               <span class="material-symbols-outlined" style="font-size: 24px; color: var(--ion-color-primary); margin-right: 10px;">
                 {{ cat.icono }}
               </span>
@@ -91,15 +94,15 @@
           </ng-container>
         </div>
 
-        
-        
-        <ion-label position="floating">Descripción detallada</ion-label>
-        <ion-item style="--background: #1e1e1e; --border-radius: 12px;">
+        <ion-item mode="md" style="--border-radius: 12px; border: 1px solid var(--ion-border-color); --background: var(--ion-item-background, var(--ion-color-light)); --padding-start: 10px;">
           <ion-textarea 
+            label="Descripción detallada del problema"
+            label-placement="stacked"
             placeholder="Ej: La tubería del drenaje lleva rota desde hace 3 días..." 
             [(ngModel)]="reporte.descripcion"
             [autoGrow]="true" 
-            rows="4">
+            rows="4"
+            style="color: var(--ion-text-color);">
           </ion-textarea>
         </ion-item>
         
@@ -114,19 +117,20 @@
     </div>
 
     <div *ngIf="pasoActual === 2" class="animacion-paso">
-      <h2 style="color: white; font-weight: 800; font-size: 24px; margin-bottom: 5px;">Toma una foto</h2>
-      <p style="color: #888; font-size: 14px; margin-bottom: 25px;">Una imagen vale más que mil palabras y ayuda a la cuadrilla.</p>
+      <h2 style="font-weight: 800; font-size: 24px; margin-bottom: 5px;">Toma una foto</h2>
+      <p style="color: var(--ion-color-medium); font-size: 14px; margin-bottom: 25px;">Una imagen ayuda a la cuadrilla a identificar el equipo necesario.</p>
 
       <div class="contenedor-foto" style="margin-bottom: 40px;">
-        <div *ngIf="!fotoCapturada" class="cuadro-vacio" (click)="tomarFoto()">
-          <ion-icon name="camera-outline"></ion-icon>
-          <p>Tocar para abrir cámara</p>
+        <div *ngIf="!fotoCapturada" class="cuadro-vacio" (click)="tomarFoto()" 
+             style="background: rgba(var(--ion-color-medium-rgb), 0.05); border: 2px dashed var(--ion-color-medium); border-radius: 20px; height: 250px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;">
+          <ion-icon name="camera-outline" style="font-size: 50px; color: var(--ion-color-medium);"></ion-icon>
+          <p style="color: var(--ion-color-medium); font-weight: bold;">Tocar para abrir cámara</p>
         </div>
 
-        <div *ngIf="fotoCapturada" class="foto-lista">
-          <img [src]="fotoCapturada" />
-          <ion-button color="danger" (click)="borrarFoto()" size="small">
-            <ion-icon name="trash-outline"></ion-icon> Cambiar Foto
+        <div *ngIf="fotoCapturada" class="foto-lista" style="text-align: center;">
+          <img [src]="fotoCapturada" style="width: 100%; border-radius: 20px; max-height: 350px; object-fit: cover; border: 1px solid var(--ion-border-color);" />
+          <ion-button color="danger" fill="clear" (click)="borrarFoto()" style="font-weight: bold;">
+            <ion-icon name="trash-outline" slot="start"></ion-icon> Cambiar Foto
           </ion-button>
         </div>
       </div>
@@ -144,14 +148,14 @@
     </div>
 
     <div *ngIf="pasoActual === 3" class="animacion-paso">
-      <h2 style="color: white; font-weight: 800; font-size: 24px; margin-bottom: 5px;">Confirma el lugar</h2>
-      <p style="color: #888; font-size: 14px; margin-bottom: 25px;">Arrastra el pin rojo al lugar exacto del reporte.</p>
+      <h2 style="font-weight: 800; font-size: 24px; margin-bottom: 5px;">Confirma el lugar</h2>
+      <p style="color: var(--ion-color-medium); font-size: 14px; margin-bottom: 25px;">Arrastra el pin rojo al lugar exacto del reporte.</p>
 
       <div class="seccion-mapa" style="margin-bottom: 30px;">
-        <div id="mapa-leaflet" class="cuadro-mapa" style="height: 350px;"></div>
+        <div id="mapa-leaflet" class="cuadro-mapa" style="height: 350px; border-radius: 20px; border: 1px solid var(--ion-border-color); overflow: hidden;"></div>
 
-        <ion-button fill="clear" size="small" (click)="centrarMapa()" class="btn-gps" style="margin-top: 10px;">
-          <ion-icon slot="start" name="locate"></ion-icon>
+        <ion-button fill="clear" size="small" (click)="centrarMapa()" color="primary" style="font-weight: bold; margin-top: 10px;">
+          <ion-icon slot="start" name="locate-outline"></ion-icon>
           Actualizar mi ubicación
         </ion-button>
       </div>
@@ -161,8 +165,8 @@
           <ion-icon name="arrow-back-outline" slot="icon-only"></ion-icon>
         </ion-button>
         <ion-button expand="block" shape="round" color="success" (click)="enviarReporte()" 
-                    style="font-weight: 800; height: 50px; flex: 1; --box-shadow: 0 4px 15px rgba(var(--ion-color-success-rgb), 0.4);">
-          <ion-icon slot="start" name="send"></ion-icon>
+                    style="font-weight: 800; height: 50px; flex: 1; box-shadow: 0 4px 15px rgba(var(--ion-color-success-rgb), 0.3);">
+          <ion-icon slot="start" name="send-outline"></ion-icon>
           ENVIAR REPORTE
         </ion-button>
       </div>
