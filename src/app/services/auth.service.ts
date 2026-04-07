@@ -4,6 +4,7 @@ import { tap, catchError } from 'rxjs/operators';
 import { throwError } from 'rxjs';
 import { Firebase } from './firebase'; 
 import { Router } from '@angular/router';
+import { AlertController } from '@ionic/angular'; // Ya no necesitamos IonicSafeString
 
 @Injectable({
   providedIn: 'root'
@@ -13,6 +14,7 @@ export class AuthService {
   private router = inject(Router);
   private http = inject(HttpClient);
   private firebaseSvc = inject(Firebase);
+  private alertController = inject(AlertController);
 
   apiUrl = 'http://localhost:8000/api';
 
@@ -96,11 +98,43 @@ export class AuthService {
     this.router.navigate(['/login']);
   }
 
+  // --- MANEJO DE ERRORES CORREGIDO (Sin "async" para no confundir a RxJS) ---
   private manejarErrorAuth(err: any) {
-    // Si el error es 403 (Rechazado) o 401 (Token inválido/vencido)
-    if (err.status === 403 || err.status === 401) {
+    // Si el error es 403 (Acceso denegado)
+    if (err.status === 403 && err.error) {
+      // Usamos un fallback por si el usuario es viejo y su motivo es null en la base de datos
+      const motivo = err.error.motivo || 'Tus documentos fueron marcados como inválidos o falsos.';
+      
+      // Llamamos a la alerta asíncrona sin detener el hilo actual
+      this.mostrarAlertaRechazo(motivo);
+      
+      // Devolvemos el error real para que login.page.ts atrape el error inmediatamente
+      return throwError(() => err);
+    }
+
+    // Si es un 401 normal (Token vencido o sesión cerrada)
+    if (err.status === 401) {
       this.limpiarTodo();
     }
+    
     return throwError(() => err);
+  }
+
+  // --- NUEVA FUNCIÓN EXCLUSIVA PARA MOSTRAR LA ALERTA VISUAL ---
+  private async mostrarAlertaRechazo(motivo: string) {
+    const alert = await this.alertController.create({
+      header: 'Acceso Denegado',
+      subHeader: 'Cuenta Rechazada',
+      // Texto plano con \n\n (100% seguro contra fallos de HTML)
+      message: `Motivo: ${motivo}\n\nSi consideras que es un error, por favor acude a las oficinas del Ayuntamiento.`,
+      buttons: [{
+        text: 'Entendido',
+        handler: () => {
+          this.limpiarTodo(); // Solo expulsa visualmente al darle click al botón
+        }
+      }],
+      backdropDismiss: false // Obliga al usuario a presionar "Entendido"
+    });
+    await alert.present();
   }
 }

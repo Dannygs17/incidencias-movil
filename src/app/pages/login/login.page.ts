@@ -38,7 +38,7 @@ export class LoginPage implements OnInit {
   // --- LOGIN CON GOOGLE (FIREBASE + LARAVEL) ---
   async loginGoogle() {
     const loading = await this.loadingController.create({
-      message: 'Conectando con Google...',
+      message: 'Validando credenciales...',
       spinner: 'crescent'
     });
     
@@ -62,31 +62,21 @@ export class LoginPage implements OnInit {
             await loading.dismiss();
 
             sessionStorage.setItem('login_method', 'google');
-
             if (googleData.photoURL) {
               sessionStorage.setItem('user_photo', googleData.photoURL);
             }
 
+            // Solo navegamos al Home si TODO salió perfecto
             this.router.navigate(['/tabs/home']); 
           },
           error: async (err) => {
+            // Cerramos el loading circular
             await loading.dismiss();
-            
-            // SI LARAVEL RECHAZA (403), LIMPIAMOS FIREBASE INMEDIATAMENTE
+            // Limpiamos Firebase por seguridad
             await this.firebaseSvc.signOut(); 
             
-            let msg = 'Tu cuenta no está registrada o fue eliminada.';
-            if (err.status === 403) {
-                // Aquí capturamos el mensaje de "Cuenta bloqueada/rechazada" de Laravel
-                msg = err.error.message || 'Tu acceso ha sido revocado por el administrador.';
-            }
-
-            const alert = await this.alertController.create({
-              header: 'Acceso Denegado',
-              message: msg,
-              buttons: ['Entendido']
-            });
-            await alert.present();
+            // NO MOSTRAMOS ALERTA AQUÍ
+            // Dejamos que auth.service.ts muestre la alerta detallada del rechazo
           }
         });
       }
@@ -119,28 +109,22 @@ export class LoginPage implements OnInit {
         sessionStorage.setItem('login_method', 'normal');
         sessionStorage.removeItem('user_photo');
         
+        // Solo navega si Laravel lo aprueba
         this.router.navigate(['/tabs/home']); 
       },
       error: async (err) => {
         await loading.dismiss();
         
-        let header = 'Error de Acceso';
-        let message = 'No se pudo conectar con el servidor.';
-
-        if (err.status === 403) {
-          header = 'Cuenta Bloqueada';
-          message = err.error.message || 'Tu acceso ha sido revocado permanentemente.';
-        } else if (err.status === 401) {
-          header = 'Credenciales Incorrectas';
-          message = 'El correo o la contraseña no coinciden.';
+        // SOLO manejamos el error 401 (Contraseña incorrecta) aquí
+        // El error 403 (Rechazado) lo maneja en automático auth.service.ts
+        if (err.status === 401) {
+          const alert = await this.alertController.create({
+            header: 'Credenciales Incorrectas',
+            message: 'El correo o la contraseña no coinciden.',
+            buttons: ['Entendido']
+          });
+          await alert.present();
         }
-
-        const alert = await this.alertController.create({
-          header: header,
-          message: message,
-          buttons: ['Entendido']
-        });
-        await alert.present();
       }
     });
   }
