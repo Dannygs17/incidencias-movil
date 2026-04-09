@@ -4,7 +4,9 @@ import { tap, catchError } from 'rxjs/operators';
 import { throwError } from 'rxjs';
 import { Firebase } from './firebase'; 
 import { Router } from '@angular/router';
-import { AlertController } from '@ionic/angular'; // Ya no necesitamos IonicSafeString
+import { AlertController } from '@ionic/angular';
+// 1. IMPORTA EL ARCHIVO DE ENTORNOS
+import { environment } from 'src/environments/environment'; 
 
 @Injectable({
   providedIn: 'root'
@@ -16,9 +18,12 @@ export class AuthService {
   private firebaseSvc = inject(Firebase);
   private alertController = inject(AlertController);
 
-  apiUrl = 'http://localhost:8000/api';
+  // 2. CAMBIA ESTA LÍNEA PARA QUE LEA DEL ARCHIVO ENVIRONMENT
+  apiUrl = environment.apiUrl;
 
   constructor() { }
+
+  // ... (todo el resto de tu código queda EXACTAMENTE IGUAL) ...
 
   // --- REGISTRO MANUAL ---
   register(datos: any) {

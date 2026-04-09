@@ -7,7 +7,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 export class IncidenciaService {
   
   // Tu URL base
-  apiUrl = 'http://localhost:8000/api'; 
+  apiUrl = 'https://incidenciassmart.site/api'; 
 
   constructor(private http: HttpClient) { }
 

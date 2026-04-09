@@ -3,6 +3,8 @@
 // The list of file replacements can be found in `angular.json`.
 export const environment = {
   production: false,
+  // 1. AGREGA ESTA LÍNEA CON TU DOMINIO REAL (Asegúrate que termine en /api)
+  apiUrl: 'https://incidenciassmart.site/api',
   firebase: {
     apiKey: "AIzaSyBdnbmieMbw25bR0FxsrdL8mXRW80w-nzE",
     authDomain: "conexionfirebase-2b4a9.firebaseapp.com",

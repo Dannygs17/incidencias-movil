@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'io.ionic.starter',
-  appName: 'incidencias-movil',
+  appId: 'com.incidenciassmart.app', 
+  appName: 'Incidencias Smart',      
   webDir: 'www'
 };
 

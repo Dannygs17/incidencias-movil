@@ -46,7 +46,7 @@ export class NuevoReportePage implements OnInit, AfterViewInit {
   private cdr = inject(ChangeDetectorRef); 
   private imageCompress = inject(NgxImageCompressService); 
   
-  private apiUrl = 'http://localhost:8000/api/incidencias';
+  private apiUrl = 'https://incidenciassmart.site/api/incidencias';
 
   usuario: any = { status: '' }; 
   categorias: any[] = []; 
@@ -86,7 +86,7 @@ export class NuevoReportePage implements OnInit, AfterViewInit {
   }
 
   cargarCategorias() {
-    this.http.get('http://localhost:8000/api/categorias').subscribe({
+    this.http.get('https://incidenciassmart.site/api/categorias').subscribe({
       next: (res: any) => this.categorias = res,
       error: (err) => this.mostrarToast('No se pudieron cargar las categorías', 'danger')
     });
