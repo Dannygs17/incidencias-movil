@@ -26,7 +26,7 @@
       <span *ngIf="usuario.status === 'invitado'" color="medium">Usuario Invitado</span>
       <span *ngIf="usuario.status === 'pending'" style="color: var(--ion-color-secondary);">Verificación en revisión</span>
       <span *ngIf="usuario.status === 'action_required'" style="color: var(--ion-color-warning);">Acción Requerida</span>
-      <span *ngStatus="usuario.status === 'ciudadano' || usuario.status === 'approved'" style="color: var(--ion-color-success);">Ciudadano Verificado</span>
+      <span *ngIf="usuario.status === 'ciudadano' || usuario.status === 'approved'" style="color: var(--ion-color-success);">Ciudadano Verificado</span>
     </p>
   </div>
 
