@@ -11,7 +11,7 @@ export class IncidenciaService {
 
   getMisReportes() {
 
-    const token = sessionStorage.getItem('token_seguridad');
+    const token = localStorage.getItem('token_seguridad');
     
     
     const headers = new HttpHeaders({

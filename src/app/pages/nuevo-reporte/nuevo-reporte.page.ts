@@ -1,14 +1,14 @@
 import { Component, OnInit, AfterViewInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule, AlertController, ToastController, LoadingController } from '@ionic/angular';
+import { IonicModule, AlertController, ToastController, LoadingController, ActionSheetController } from '@ionic/angular';
 import { Router } from '@angular/router'; 
 import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
 import { addIcons } from 'ionicons';
 import { 
   cameraOutline, locationOutline, map, locate, send, trashOutline, 
   shieldCheckmark, flash, notifications, ribbon, arrowForwardOutline,
-  timeOutline, hourglassOutline, arrowBackOutline, checkmarkCircleOutline
+  timeOutline, hourglassOutline, arrowBackOutline, checkmarkCircleOutline, imageOutline, close
 } from 'ionicons/icons';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Geolocation } from '@capacitor/geolocation';
@@ -45,6 +45,7 @@ export class NuevoReportePage implements OnInit, AfterViewInit {
   private authService = inject(AuthService); 
   private cdr = inject(ChangeDetectorRef); 
   private imageCompress = inject(NgxImageCompressService); 
+  private actionSheetCtrl = inject(ActionSheetController); // Agregado para el menú
   
   private apiUrl = 'https://incidenciassmart.site/api/incidencias';
 
@@ -62,7 +63,7 @@ export class NuevoReportePage implements OnInit, AfterViewInit {
     addIcons({ 
       cameraOutline, locationOutline, map, locate, send, trashOutline, 
       shieldCheckmark, flash, notifications, ribbon, arrowForwardOutline,
-      timeOutline, hourglassOutline, arrowBackOutline, checkmarkCircleOutline
+      timeOutline, hourglassOutline, arrowBackOutline, checkmarkCircleOutline, imageOutline, close
     });
   }
 
@@ -95,7 +96,7 @@ export class NuevoReportePage implements OnInit, AfterViewInit {
   async ionViewWillEnter() {
     this.pasoActual = 1; 
     
-    const userJson = sessionStorage.getItem('usuario');
+    const userJson = localStorage.getItem('usuario');
     if (userJson) {
       this.usuario = JSON.parse(userJson);
       this.cdr.detectChanges();
@@ -104,7 +105,7 @@ export class NuevoReportePage implements OnInit, AfterViewInit {
     this.authService.verificarEstatus().subscribe({
       next: (res: any) => {
         this.usuario = res;
-        sessionStorage.setItem('usuario', JSON.stringify(res));
+        localStorage.setItem('usuario', JSON.stringify(res));
         this.cdr.detectChanges(); 
       },
       error: (err) => console.error('Error sincronizando', err)
@@ -112,6 +113,23 @@ export class NuevoReportePage implements OnInit, AfterViewInit {
   }
 
   async ngAfterViewInit() { }
+
+  // --- OBLIGAR A ANDROID A PEDIR PERMISOS ---
+  async solicitarPermisosGPS(): Promise<boolean> {
+    try {
+      const status = await Geolocation.checkPermissions();
+      if (status.location !== 'granted') {
+        const request = await Geolocation.requestPermissions();
+        if (request.location !== 'granted') {
+          this.mostrarToast('Debes otorgar permisos de ubicación para continuar', 'danger');
+          return false;
+        }
+      }
+      return true;
+    } catch (e) {
+      return true; 
+    }
+  }
 
   async initMap() {
     const container = document.getElementById('mapa-leaflet');
@@ -124,7 +142,10 @@ export class NuevoReportePage implements OnInit, AfterViewInit {
       return;
     }
 
+    const tienePermiso = await this.solicitarPermisosGPS();
+    
     try {
+      if (!tienePermiso) throw new Error('Sin permiso');
       const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
       this.reporte.latitud = position.coords.latitude;
       this.reporte.longitud = position.coords.longitude;
@@ -164,6 +185,9 @@ export class NuevoReportePage implements OnInit, AfterViewInit {
   }
 
   async centrarMapa() {
+    const tienePermiso = await this.solicitarPermisosGPS();
+    if (!tienePermiso) return;
+
     try {
       const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
       this.reporte.latitud = position.coords.latitude;
@@ -172,15 +196,38 @@ export class NuevoReportePage implements OnInit, AfterViewInit {
         this.map.flyTo([this.reporte.latitud, this.reporte.longitud], 18);
         this.actualizarMarcador(this.reporte.latitud, this.reporte.longitud);
       }
-    } catch (e) { this.mostrarToast('GPS no disponible', 'danger'); }
+    } catch (e) { 
+      this.mostrarToast('GPS no disponible. Enciende tu ubicación.', 'danger'); 
+    }
   }
 
-  async tomarFoto() {
+  // --- NUEVO MENÚ DE FOTOS ---
+  async mostrarMenuFoto() {
+    const actionSheet = await this.actionSheetCtrl.create({
+      header: 'Evidencia del reporte',
+      buttons: [
+        {
+          text: 'Tomar foto ahora',
+          icon: 'camera-outline',
+          handler: () => { this.ejecutarCamara(CameraSource.Camera); }
+        },
+        {
+          text: 'Subir desde la galería',
+          icon: 'image-outline',
+          handler: () => { this.ejecutarCamara(CameraSource.Photos); }
+        },
+        { text: 'Cancelar', icon: 'close', role: 'cancel' }
+      ]
+    });
+    await actionSheet.present();
+  }
+
+  async ejecutarCamara(fuente: CameraSource) {
     try {
       const image = await Camera.getPhoto({
         quality: 100, 
         resultType: CameraResultType.DataUrl,
-        source: CameraSource.Prompt,
+        source: fuente,
         correctOrientation: true
       });
 
@@ -215,7 +262,7 @@ export class NuevoReportePage implements OnInit, AfterViewInit {
     });
     await loading.present();
     
-    const token = sessionStorage.getItem('token_seguridad');
+    const token = localStorage.getItem('token_seguridad');
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
     const body = { ...this.reporte, imagen: this.fotoCapturada };
 
@@ -224,7 +271,6 @@ export class NuevoReportePage implements OnInit, AfterViewInit {
         await loading.dismiss(); 
         this.mostrarToast('Reporte enviado con éxito', 'success');
 
-        // ---> LIMPIEZA DEL FORMULARIO <---
         this.reporte = { categoria_id: null, descripcion: '', latitud: 0, longitud: 0 };
         this.fotoCapturada = undefined;
         this.pasoActual = 1;

@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "861526039202",
+    "project_id": "conexionfirebase-2b4a9",
+    "storage_bucket": "conexionfirebase-2b4a9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:861526039202:android:720059a76113e1e079d5fb",
+        "android_client_info": {
+          "package_name": "com.incidenciassmart.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "861526039202-b37gdu72bvurgua3b5856fapacq2bo5t.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.incidenciassmart.app",
+            "certificate_hash": "77a6c811002b178deca7af9f24a6741d810eee7e"
+          }
+        },
+        {
+          "client_id": "861526039202-lmnbd8qv2khvm6q1mht7fnntpfs2ab5o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCrQdXEITGDh_TAl_ikgxr-BPz1vdPEedI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "861526039202-lmnbd8qv2khvm6q1mht7fnntpfs2ab5o.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

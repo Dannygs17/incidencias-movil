@@ -121,7 +121,7 @@
       <p style="color: var(--ion-color-medium); font-size: 14px; margin-bottom: 25px;">Una imagen ayuda a la cuadrilla a identificar el equipo necesario.</p>
 
       <div class="contenedor-foto" style="margin-bottom: 40px;">
-        <div *ngIf="!fotoCapturada" class="cuadro-vacio" (click)="tomarFoto()" 
+        <div *ngIf="!fotoCapturada" class="cuadro-vacio" (click)="mostrarMenuFoto()"
              style="background: rgba(var(--ion-color-medium-rgb), 0.05); border: 2px dashed var(--ion-color-medium); border-radius: 20px; height: 250px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;">
           <ion-icon name="camera-outline" style="font-size: 50px; color: var(--ion-color-medium);"></ion-icon>
           <p style="color: var(--ion-color-medium); font-weight: bold;">Tocar para abrir cámara</p>

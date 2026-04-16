@@ -54,7 +54,7 @@
   <div class="ion-padding-vertical">
     <h3 class="ion-text-center" style="font-weight: 700;">Fotos del INE</h3>
     
-    <ion-card (click)="tomarFoto('frente')" class="ion-text-center ion-padding" 
+    <ion-card (click)="mostrarMenuFoto('frente')" class="ion-text-center ion-padding" 
               [ngStyle]="{'border': imagenFrente ? '2px solid var(--ion-color-success)' : '2px dashed var(--ion-color-medium)', 'background': 'transparent'}">
       <div *ngIf="!imagenFrente">
         <ion-icon name="id-card-outline" style="font-size: 40px; color: var(--ion-color-medium);"></ion-icon>
@@ -69,7 +69,7 @@
     </ion-card>
 
     <div *ngIf="imagenFrente">
-      <ion-card (click)="tomarFoto('reverso')" class="ion-text-center ion-padding" 
+      <ion-card (click)="mostrarMenuFoto('reverso')" class="ion-text-center ion-padding" 
                 [ngStyle]="{'border': imagenReverso ? '2px solid var(--ion-color-success)' : '2px dashed var(--ion-color-medium)', 'background': 'transparent'}">
         <div *ngIf="!imagenReverso">
           <ion-icon name="camera-reverse-outline" style="font-size: 40px; color: var(--ion-color-medium);"></ion-icon>

@@ -1,7 +1,7 @@
 import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule, AlertController, ToastController, LoadingController } from '@ionic/angular';
+import { IonicModule, AlertController, ToastController, LoadingController, ActionSheetController } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
@@ -11,7 +11,7 @@ import {
   cardOutline, cameraReverseOutline, shieldCheckmarkOutline, cloudUploadOutline, 
   person, mailOutline, lockClosedOutline, logOutOutline, checkmarkCircle,
   alertCircleOutline, checkmarkOutline, fingerPrintOutline, timeOutline,
-  lockOpenOutline, keyOutline 
+  lockOpenOutline, keyOutline, cameraOutline, imageOutline, close
 } from 'ionicons/icons';
 
 @Component({
@@ -36,13 +36,14 @@ export class PerfilPage implements OnInit {
     private toastController: ToastController,
     private loadingController: LoadingController,
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private actionSheetCtrl: ActionSheetController 
   ) { 
     addIcons({ 
       cardOutline, cameraReverseOutline, shieldCheckmarkOutline, cloudUploadOutline, 
       person, mailOutline, lockClosedOutline, logOutOutline, checkmarkCircle,
       alertCircleOutline, checkmarkOutline, fingerPrintOutline, timeOutline,
-      lockOpenOutline, keyOutline
+      lockOpenOutline, keyOutline, cameraOutline, imageOutline, close
     });
   }
 
@@ -53,12 +54,12 @@ export class PerfilPage implements OnInit {
   }
 
   cargarDatosUsuario() {
-    const userString = sessionStorage.getItem('usuario'); 
+    const userString = localStorage.getItem('usuario'); 
     if (userString) {
       this.usuario = JSON.parse(userString);
-      const fotoGoogle = sessionStorage.getItem('user_photo');
+      const fotoGoogle = localStorage.getItem('user_photo');
       if (fotoGoogle) { this.usuario.photoURL = fotoGoogle; }
-      this.usuario.is_google = (sessionStorage.getItem('login_method') === 'google');
+      this.usuario.is_google = (localStorage.getItem('login_method') === 'google');
     } else {
       this.ejecutarCerrarSesion();
       return;
@@ -68,9 +69,8 @@ export class PerfilPage implements OnInit {
       next: (userFromDB: any) => {
         this.usuario.status = userFromDB.status;
         this.usuario.rejection_reason = userFromDB.rejection_reason;
-        // Obtenemos los campos a corregir del backend
         this.usuario.correction_fields = userFromDB.correction_fields || []; 
-        sessionStorage.setItem('usuario', JSON.stringify(this.usuario));
+        localStorage.setItem('usuario', JSON.stringify(this.usuario));
       },
       error: (err) => console.error('Error al sincronizar estatus:', err)
     });
@@ -84,7 +84,6 @@ export class PerfilPage implements OnInit {
     return p;
   }
 
-  // Define si un campo específico debe mostrarse en la pantalla
   necesitaCorregir(campo: string): boolean {
     if (this.usuario.status === 'invitado') return true; 
     if (this.usuario.status === 'action_required' && this.usuario.correction_fields) {
@@ -93,7 +92,6 @@ export class PerfilPage implements OnInit {
     return false;
   }
 
-  // Verifica que solo los campos solicitados estén llenos para habilitar el botón
   formularioValido(): boolean {
     if (this.usuario.status === 'invitado') {
       return !!(this.usuario.curp && this.usuario.curp.length >= 18 && this.ineFrente && this.ineReverso);
@@ -103,23 +101,40 @@ export class PerfilPage implements OnInit {
       if (this.necesitaCorregir('curp') && (!this.usuario.curp || this.usuario.curp.length < 18)) return false;
       if (this.necesitaCorregir('ine_frente') && !this.ineFrente) return false;
       if (this.necesitaCorregir('ine_reverso') && !this.ineReverso) return false;
-      
       return true; 
     }
     return false;
   }
 
-  async capturarINE(lado: 'frente' | 'reverso') {
+  async mostrarMenuFoto(lado: 'frente' | 'reverso') {
+    const actionSheet = await this.actionSheetCtrl.create({
+      header: `Actualizar foto del INE (${lado})`,
+      buttons: [
+        {
+          text: 'Tomar foto con la cámara',
+          icon: 'camera-outline',
+          handler: () => { this.ejecutarCamara(lado, CameraSource.Camera); }
+        },
+        {
+          text: 'Elegir de la galería',
+          icon: 'image-outline',
+          handler: () => { this.ejecutarCamara(lado, CameraSource.Photos); }
+        },
+        { text: 'Cancelar', icon: 'close', role: 'cancel' }
+      ]
+    });
+    await actionSheet.present();
+  }
+
+  async ejecutarCamara(lado: 'frente' | 'reverso', fuente: CameraSource) {
     try {
       const image = await Camera.getPhoto({
         quality: 60, 
         resultType: CameraResultType.DataUrl,
-        source: CameraSource.Prompt
+        source: fuente 
       });
-
       if (lado === 'frente') this.ineFrente = image.dataUrl || null;
       else this.ineReverso = image.dataUrl || null;
-      
     } catch (e) {
       console.log('Captura cancelada');
     }
@@ -131,6 +146,9 @@ export class PerfilPage implements OnInit {
       return;
     }
 
+    // LÓGICA: Guardamos el estado previo para personalizar el mensaje final
+    const estatusPrevio = this.usuario.status;
+
     const loading = await this.loadingController.create({ 
       message: 'Enviando actualización...',
       spinner: 'crescent'
@@ -139,16 +157,13 @@ export class PerfilPage implements OnInit {
 
     try {
       const formData = new FormData();
-      
       if (this.necesitaCorregir('curp')) {
         formData.append('curp', this.usuario.curp.toUpperCase());
       }
-
       if (this.ineFrente) {
         const blobFrente = await (await fetch(this.ineFrente)).blob();
         formData.append('ine_frente', blobFrente, 'frente.jpg');
       }
-
       if (this.ineReverso) {
         const blobReverso = await (await fetch(this.ineReverso)).blob();
         formData.append('ine_reverso', blobReverso, 'reverso.jpg');
@@ -166,12 +181,21 @@ export class PerfilPage implements OnInit {
             this.usuario.status = 'pending';
           }
 
-          sessionStorage.setItem('usuario', JSON.stringify(this.usuario));
+          localStorage.setItem('usuario', JSON.stringify(this.usuario));
+
+          // PERSONALIZACIÓN DEL MENSAJE SEGÚN EL CASO
+          let subHeaderMsg = 'Documentación enviada';
+          let bodyMsg = 'Tus datos han sido recibidos. Espera la validación del administrador.';
+
+          if (estatusPrevio === 'action_required') {
+            subHeaderMsg = 'Documentación actualizada';
+            bodyMsg = 'Tus correcciones han sido enviadas exitosamente. Espera la validación del administrador.';
+          }
 
           const alert = await this.alertController.create({
             header: '¡Hecho!',
-            subHeader: 'Documentación actualizada',
-            message: 'Tus correcciones han sido enviadas exitosamente. Espera la validación del administrador.',
+            subHeader: subHeaderMsg,
+            message: bodyMsg,
             buttons: ['Entendido']
           });
           await alert.present();
@@ -179,17 +203,16 @@ export class PerfilPage implements OnInit {
         },
         error: async (err: any) => {
           await loading.dismiss();
-          console.error('Error:', err);
           this.mostrarToast('Error al conectar con el servidor', 'danger');
         }
       });
-
     } catch (e) {
       await loading.dismiss();
       this.mostrarToast('Error al procesar las imágenes', 'danger');
     }
   }
 
+  // ... (cambiarPassword, guardarNuevaPassword, mostrarToast, etc. se mantienen igual)
   cambiarPassword() {
     if (this.usuario.status !== 'ciudadano' && this.usuario.status !== 'approved') {
       this.mostrarToast('Función solo disponible para usuarios verificados.', 'info');
@@ -208,7 +231,6 @@ export class PerfilPage implements OnInit {
       this.mostrarToast('Las nuevas contraseñas no coinciden', 'danger');
       return;
     }
-
     this.authService.updatePassword(this.passData).subscribe({
       next: (res: any) => {
         this.mostrarToast('Tu contraseña fue actualizada correctamente', 'success');
@@ -239,7 +261,7 @@ export class PerfilPage implements OnInit {
   }
 
   ejecutarCerrarSesion() {
-    sessionStorage.clear();
+    localStorage.clear();
     this.router.navigate(['/login']);
   }
 }

@@ -12,7 +12,7 @@
     <p style="color: var(--ion-color-medium);">Ingresa tus datos para continuar</p>
   </div>
 
-  <ion-list lines="full" class="ion-margin-bottom" style="background: transparent;">
+  <ion-list lines="full" style="background: transparent;">
     <ion-item>
       <ion-label position="floating" color="medium">Correo Electrónico</ion-label>
       <ion-input type="email" [(ngModel)]="credentials.email" name="email"></ion-input>
@@ -24,9 +24,15 @@
     </ion-item>
   </ion-list>
 
+  <div class="ion-text-right ion-margin-bottom" style="margin-top: 5px;">
+    <ion-button fill="clear" size="small" color="medium" style="text-transform: none; font-weight: 600; letter-spacing: 0;" (click)="abrirModalCorreo()">
+      ¿Olvidaste tu contraseña?
+    </ion-button>
+  </div>
+
   <div class="ion-padding-horizontal">
     
-    <ion-button expand="block" shape="round" color="primary" (click)="onLogin()" style="height: 50px; font-weight: 800; margin-top: 20px;">
+    <ion-button expand="block" shape="round" color="primary" (click)="onLogin()" style="height: 50px; font-weight: 800; margin-top: 10px;">
       Iniciar Sesión
     </ion-button>
     
@@ -48,6 +54,74 @@
         Crea una cuenta nueva aquí
       </ion-button>
     </div>
-    
   </div>
+
+  <ion-modal [isOpen]="isForgotModalOpen" (didDismiss)="isForgotModalOpen = false" initialBreakpoint="0.5" [breakpoints]="[0, 0.5, 0.7]" style="--border-radius: 30px 30px 0 0;">
+    <ng-template>
+      <div style="width: 45px; height: 5px; background: var(--ion-color-medium); opacity: 0.3; border-radius: 10px; margin: 15px auto; display: block;"></div>
+      <ion-header class="ion-no-border">
+        <ion-toolbar style="--background: transparent;">
+          <ion-title style="font-weight: 800; font-size: 18px;">Recuperar Cuenta</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="isForgotModalOpen = false" color="medium">Cerrar</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <p style="color: var(--ion-color-medium); font-size: 14px; text-align: center; margin-bottom: 20px;">
+          Ingresa el correo electrónico asociado a tu cuenta. Te enviaremos un PIN de 6 dígitos para verificar tu identidad.
+        </p>
+        <div style="background: var(--ion-card-background); padding: 10px 20px; border-radius: 20px; border: 1px solid var(--ion-border-color);">
+          <ion-item lines="none">
+            <ion-icon name="mail-outline" slot="start" color="primary"></ion-icon>
+            <ion-input type="email" [(ngModel)]="recoveryEmail" placeholder="Tu correo electrónico"></ion-input>
+          </ion-item>
+        </div>
+        <ion-button expand="block" mode="ios" color="primary" (click)="enviarPin()" style="--border-radius: 14px; height: 50px; font-weight: 800; margin-top: 25px;">
+          ENVIAR CÓDIGO
+        </ion-button>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <ion-modal [isOpen]="isResetModalOpen" (didDismiss)="isResetModalOpen = false" initialBreakpoint="0.75" [breakpoints]="[0, 0.75, 1]" style="--border-radius: 30px 30px 0 0;">
+    <ng-template>
+      <div style="width: 45px; height: 5px; background: var(--ion-color-medium); opacity: 0.3; border-radius: 10px; margin: 15px auto; display: block;"></div>
+      <ion-header class="ion-no-border">
+        <ion-toolbar style="--background: transparent;">
+          <ion-title style="font-weight: 800; font-size: 18px;">Crear Nueva Contraseña</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="isResetModalOpen = false" color="medium">Cancelar</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <p style="color: var(--ion-color-medium); font-size: 14px; text-align: center; margin-bottom: 20px;">
+          Escribe el PIN de 6 dígitos que enviamos a <b>{{ recoveryEmail }}</b> y elige tu nueva contraseña.
+        </p>
+        <div style="background: var(--ion-card-background); padding: 15px 20px; border-radius: 20px; border: 1px solid var(--ion-border-color);">
+          
+          <ion-item lines="none" style="border-radius: 12px; margin-bottom: 10px; background: rgba(var(--ion-color-primary-rgb), 0.05);">
+            <ion-icon name="keypad-outline" slot="start" color="primary"></ion-icon>
+            <ion-input type="text" [(ngModel)]="resetData.pin" placeholder="PIN de 6 dígitos" maxlength="6" style="font-weight: bold; letter-spacing: 5px; font-size: 18px; text-align: center;"></ion-input>
+          </ion-item>
+
+          <ion-item lines="none" style="border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--ion-border-color);">
+            <ion-icon name="lock-closed-outline" slot="start" color="primary"></ion-icon>
+            <ion-input type="password" [(ngModel)]="resetData.password" placeholder="Nueva contraseña"></ion-input>
+          </ion-item>
+
+          <ion-item lines="none" style="border-radius: 12px; border: 1px solid var(--ion-border-color);">
+            <ion-icon name="shield-checkmark-outline" slot="start" color="primary"></ion-icon>
+            <ion-input type="password" [(ngModel)]="resetData.password_confirmation" placeholder="Confirmar contraseña"></ion-input>
+          </ion-item>
+
+        </div>
+        <ion-button expand="block" mode="ios" color="success" (click)="guardarNuevaPasswordPin()" style="--border-radius: 14px; height: 50px; font-weight: 800; margin-top: 25px;">
+          CAMBIAR CONTRASEÑA
+        </ion-button>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
 </ion-content>

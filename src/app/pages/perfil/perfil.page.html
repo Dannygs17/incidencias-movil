@@ -5,7 +5,6 @@
 </ion-header>
 
 <ion-content>
-
   <div style="text-align: center; padding: 40px 20px 20px 20px; background: linear-gradient(to bottom, var(--ion-color-primary), transparent);">
     <div style="position: relative; width: 110px; height: 110px; margin: 0 auto 15px auto;">
       <ion-avatar style="width: 100%; height: 100%; border: 4px solid var(--ion-background-color); box-shadow: 0 8px 20px rgba(0,0,0,0.2); background: var(--ion-color-light); display: flex; align-items: center; justify-content: center; overflow: hidden;">
@@ -35,7 +34,6 @@
       <ion-icon name="alert-circle-outline" style="font-size: 45px; color: var(--ion-color-warning);"></ion-icon>
       <h3 style="font-weight: 800; margin: 10px 0;">Atención Requerida</h3>
       <p style="color: var(--ion-color-medium); font-size: 13px;">El administrador dejó una observación:</p>
-      
       <div style="background: rgba(var(--ion-color-dark-rgb), 0.1); padding: 12px; border-radius: 8px; margin: 15px 0; border: 1px dashed var(--ion-color-warning);">
         <p style="color: var(--ion-color-warning); font-weight: bold; font-style: italic; margin: 0;">"{{ usuario.rejection_reason }}"</p>
       </div>
@@ -44,14 +42,12 @@
 
   <div *ngIf="usuario.status === 'invitado' || usuario.status === 'action_required'" style="padding: 0 20px;">
     <div style="background: var(--ion-card-background); border-radius: 20px; padding: 20px; border: 1px solid var(--ion-border-color); margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
-      
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
         <ion-label color="medium" style="font-weight: 800; font-size: 10px; letter-spacing: 1px;">PROGRESO DE VERIFICACIÓN</ion-label>
         <ion-badge color="warning" style="font-weight: 800;">{{ calcularPorcentaje() }}%</ion-badge>
       </div>
       <div style="width: 100%; height: 8px; background: var(--ion-color-light); border-radius: 10px; overflow: hidden; margin-bottom: 20px;">
-        <div [style.width]="calcularPorcentaje() + '%'" 
-             style="height: 100%; background: linear-gradient(to right, var(--ion-color-warning), var(--ion-color-success)); transition: 0.6s cubic-bezier(0.32, 0.94, 0.6, 1);"></div>
+        <div [style.width]="calcularPorcentaje() + '%'" style="height: 100%; background: linear-gradient(to right, var(--ion-color-warning), var(--ion-color-success)); transition: 0.6s cubic-bezier(0.32, 0.94, 0.6, 1);"></div>
       </div>
 
       <ion-item *ngIf="necesitaCorregir('curp')" style="--border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--ion-border-color); --padding-start: 10px;">
@@ -62,8 +58,7 @@
       <ion-grid class="ion-no-padding">
         <ion-row>
           <ion-col *ngIf="necesitaCorregir('ine_frente')" [size]="necesitaCorregir('ine_reverso') ? '6' : '12'" style="padding: 4px;">
-            <div (click)="capturarINE('frente')" 
-                 style="height: 100px; border: 2px dashed var(--ion-color-medium); border-radius: 14px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; background: rgba(var(--ion-color-medium-rgb), 0.05);">
+            <div (click)="mostrarMenuFoto('frente')" style="height: 100px; border: 2px dashed var(--ion-color-medium); border-radius: 14px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; background: rgba(var(--ion-color-medium-rgb), 0.05);">
               <img *ngIf="ineFrente" [src]="ineFrente" style="width: 100%; height: 100%; object-fit: cover;" />
               <div *ngIf="!ineFrente" style="text-align: center; color: var(--ion-color-medium);">
                 <ion-icon name="card-outline" style="font-size: 28px;"></ion-icon>
@@ -72,10 +67,8 @@
               <ion-icon *ngIf="ineFrente" name="checkmark-circle" color="success" style="position: absolute; top: 5px; right: 5px; font-size: 18px;"></ion-icon>
             </div>
           </ion-col>
-          
           <ion-col *ngIf="necesitaCorregir('ine_reverso')" [size]="necesitaCorregir('ine_frente') ? '6' : '12'" style="padding: 4px;">
-            <div (click)="capturarINE('reverso')" 
-                 style="height: 100px; border: 2px dashed var(--ion-color-medium); border-radius: 14px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; background: rgba(var(--ion-color-medium-rgb), 0.05);">
+            <div (click)="mostrarMenuFoto('reverso')" style="height: 100px; border: 2px dashed var(--ion-color-medium); border-radius: 14px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; background: rgba(var(--ion-color-medium-rgb), 0.05);">
               <img *ngIf="ineReverso" [src]="ineReverso" style="width: 100%; height: 100%; object-fit: cover;" />
               <div *ngIf="!ineReverso" style="text-align: center; color: var(--ion-color-medium);">
                 <ion-icon name="camera-reverse-outline" style="font-size: 28px;"></ion-icon>
@@ -105,7 +98,6 @@
           <h3 style="font-weight: 600;">{{ usuario.email || '...' }}</h3>
         </ion-label>
       </ion-item>
-
       <ion-item *ngIf="usuario.curp" lines="none" style="height: 80px;">
         <div slot="start" style="background: rgba(var(--ion-color-primary-rgb), 0.1); padding: 10px; border-radius: 12px;">
           <ion-icon name="card-outline" color="primary" style="font-size: 24px;"></ion-icon>
@@ -130,9 +122,7 @@
     </ion-button>
   </div>
 
-  <ion-modal [isOpen]="isModalPasswordOpen" (didDismiss)="isModalPasswordOpen = false" 
-             initialBreakpoint="0.65" [breakpoints]="[0, 0.65]"
-             style="--border-radius: 30px 30px 0 0;">
+  <ion-modal [isOpen]="isModalPasswordOpen" (didDismiss)="isModalPasswordOpen = false" initialBreakpoint="0.65" [breakpoints]="[0, 0.65]" style="--border-radius: 30px 30px 0 0;">
     <ng-template>
       <div style="width: 45px; height: 5px; background: var(--ion-color-medium); opacity: 0.3; border-radius: 10px; margin: 15px auto; display: block;"></div>
       <ion-header class="ion-no-border">
@@ -164,5 +154,4 @@
       </ion-content>
     </ng-template>
   </ion-modal>
-
 </ion-content>

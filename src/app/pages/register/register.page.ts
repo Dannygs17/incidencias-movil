@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule, LoadingController, AlertController } from '@ionic/angular';
+import { IonicModule, LoadingController, AlertController, ActionSheetController } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { AuthService } from 'src/app/services/auth.service';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera'; 
@@ -35,7 +35,8 @@ export class RegisterPage implements OnInit {
     private authService: AuthService,
     private router: Router,
     private alertController: AlertController,
-    private loadingController: LoadingController
+    private loadingController: LoadingController,
+    private actionSheetCtrl: ActionSheetController // Agregado para el menú
   ) { }
 
   ngOnInit() {}
@@ -61,13 +62,39 @@ export class RegisterPage implements OnInit {
     this.cargando = false;
   }
 
-  async tomarFoto(tipo: 'frente' | 'reverso') {
+  // --- NUEVO MENÚ DE FOTOS ---
+  async mostrarMenuFoto(tipo: 'frente' | 'reverso') {
+    const actionSheet = await this.actionSheetCtrl.create({
+      header: '¿De dónde quieres obtener la foto?',
+      buttons: [
+        {
+          text: 'Tomar foto con la cámara',
+          icon: 'camera-outline',
+          handler: () => { this.ejecutarCamara(tipo, CameraSource.Camera); }
+        },
+        {
+          text: 'Elegir de la galería',
+          icon: 'image-outline',
+          handler: () => { this.ejecutarCamara(tipo, CameraSource.Photos); }
+        },
+        {
+          text: 'Cancelar',
+          icon: 'close',
+          role: 'cancel'
+        }
+      ]
+    });
+    await actionSheet.present();
+  }
+
+  // --- EJECUCIÓN DE CÁMARA SILENCIOSA ---
+  async ejecutarCamara(tipo: 'frente' | 'reverso', fuente: CameraSource) {
     try {
       const image = await Camera.getPhoto({
         quality: 70, 
         allowEditing: false,
         resultType: CameraResultType.Uri, 
-        source: CameraSource.Prompt 
+        source: fuente 
       });
 
       const response = await fetch(image.webPath!);
@@ -120,11 +147,10 @@ export class RegisterPage implements OnInit {
         await loading.dismiss();
         this.cargando = false;
         
-        // === CAMBIO CLAVE: GUARDAR SESIÓN AL INSTANTE ===
         if (res.access_token) {
-          sessionStorage.setItem('token_seguridad', res.access_token);
-          sessionStorage.setItem('usuario', JSON.stringify(res.user));
-          sessionStorage.setItem('login_method', 'normal'); // Marca de registro manual
+          localStorage.setItem('token_seguridad', res.access_token);
+          localStorage.setItem('usuario', JSON.stringify(res.user));
+          localStorage.setItem('login_method', 'normal'); 
         }
         
         const alert = await this.alertController.create({
@@ -135,7 +161,6 @@ export class RegisterPage implements OnInit {
               text: 'Entendido',
               handler: () => {
                 this.limpiarFormulario();
-                // === CAMBIO CLAVE: MANDAMOS AL HOME, NO AL LOGIN ===
                 this.router.navigate(['/tabs/home']);
               }
             }
@@ -149,7 +174,6 @@ export class RegisterPage implements OnInit {
         this.cargando = false;
         console.error(err);
         
-        // Manejo de errores específicos (Ej. Correo duplicado)
         let mensaje = 'Hubo un problema con el registro.';
         if (err.error?.errors?.email) {
           mensaje = 'Este correo electrónico ya está registrado.';

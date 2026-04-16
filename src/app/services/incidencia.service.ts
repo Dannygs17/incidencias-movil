@@ -12,7 +12,7 @@ export class IncidenciaService {
   constructor(private http: HttpClient) { }
 
   getMisReportes() {
-    const token = sessionStorage.getItem('token_seguridad');
+    const token = localStorage.getItem('token_seguridad');
     
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${token}`

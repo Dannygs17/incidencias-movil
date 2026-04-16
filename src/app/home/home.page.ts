@@ -20,7 +20,7 @@ export class HomePage {
   filtroActual: string = 'todos';
   cargando: boolean = true; 
 
-  // <--- NUEVO: CONTROL DE CONTEOS
+  // CONTROL DE CONTEOS
   conteos = { todos: 0, activos: 0, resueltos: 0 };
 
   isModalOpen = false;
@@ -33,9 +33,14 @@ export class HomePage {
   ) {}
 
   ionViewWillEnter() {
-    this.cargando = true; 
+    // CAMBIO CLAVE: Solo activamos la animación visual si la lista está completamente vacía
+    if (this.misReportes.length === 0) {
+      this.cargando = true; 
+    }
+
     this.authService.verificarEstatus().subscribe({
       next: (res: any) => {
+        // Llama a los reportes. Si ya hay datos, los actualizará silenciosamente.
         this.cargarReportes();
       },
       error: (err: any) => {
@@ -46,10 +51,12 @@ export class HomePage {
   }
 
   cargarReportes(event?: any) {
-    if (!event) this.cargando = true;
+    // CAMBIO CLAVE: Solo activamos la animación si no es un "refresh manual" y no hay datos previos
+    if (!event && this.misReportes.length === 0) {
+      this.cargando = true;
+    }
 
     this.incidenciaService.getMisReportes().subscribe({
-      // LE QUITAMOS LOS CORCHETES AQUÍ ABAJO (cambiamos any[] por any)
       next: (res: any) => {
         this.misReportes = res;
         
@@ -60,17 +67,21 @@ export class HomePage {
 
         this.filtrar(); 
         this.cargando = false; 
-        if (event) event.target.complete();
+        
+        // Apaga la ruedita de carga si el usuario jaló la pantalla hacia abajo
+        if (event) {
+          event.target.complete();
+        }
       },
       error: (err: any) => {
         console.error('Error al cargar reportes', err);
         this.cargando = false;
-        if (event) event.target.complete();
+        if (event) {
+          event.target.complete();
+        }
       }
     });
   }
-
- 
 
   filtrar() {
     if (this.filtroActual === 'todos') {
@@ -109,7 +120,7 @@ export class HomePage {
         this.router.navigate(['/login']);
       },
       error: (err: any) => {
-        sessionStorage.clear();
+        localStorage.clear();
         this.router.navigate(['/login']);
       }
     });
