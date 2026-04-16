@@ -14,6 +14,9 @@ import {
   lockOpenOutline, keyOutline, cameraOutline, imageOutline, close
 } from 'ionicons/icons';
 
+// IMPORTACIÓN AÑADIDA PARA CERRAR SESIÓN DE GOOGLE NATIVO
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+
 @Component({
   selector: 'app-perfil',
   templateUrl: './perfil.page.html',
@@ -146,7 +149,6 @@ export class PerfilPage implements OnInit {
       return;
     }
 
-    // LÓGICA: Guardamos el estado previo para personalizar el mensaje final
     const estatusPrevio = this.usuario.status;
 
     const loading = await this.loadingController.create({ 
@@ -183,7 +185,6 @@ export class PerfilPage implements OnInit {
 
           localStorage.setItem('usuario', JSON.stringify(this.usuario));
 
-          // PERSONALIZACIÓN DEL MENSAJE SEGÚN EL CASO
           let subHeaderMsg = 'Documentación enviada';
           let bodyMsg = 'Tus datos han sido recibidos. Espera la validación del administrador.';
 
@@ -212,7 +213,6 @@ export class PerfilPage implements OnInit {
     }
   }
 
-  // ... (cambiarPassword, guardarNuevaPassword, mostrarToast, etc. se mantienen igual)
   cambiarPassword() {
     if (this.usuario.status !== 'ciudadano' && this.usuario.status !== 'approved') {
       this.mostrarToast('Función solo disponible para usuarios verificados.', 'info');
@@ -260,7 +260,16 @@ export class PerfilPage implements OnInit {
     await alert.present();
   }
 
-  ejecutarCerrarSesion() {
+  // FUNCIÓN MODIFICADA PARA DESCONECTAR DE GOOGLE
+  async ejecutarCerrarSesion() {
+    if (this.usuario.is_google) {
+      try {
+        await GoogleAuth.signOut();
+      } catch (e) {
+        console.log('Sesión de Google ya estaba cerrada o hubo un error', e);
+      }
+    }
+
     localStorage.clear();
     this.router.navigate(['/login']);
   }
